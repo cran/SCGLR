@@ -1,0 +1,126 @@
+\name{scglr}
+\alias{scglr}
+\title{Function that fits the scglr model}
+\usage{
+  scglr(formula, data, family, K = 1, size = NULL,
+    offset = NULL, subset = NULL, na.action = na.omit,
+    crit = list())
+}
+\arguments{
+  \item{formula}{an object of class "Formula" (or one that
+  can be coerced to that class): a symbolic description of
+  the model to be fitted}
+
+  \item{data}{a data frame to be modeled}
+
+  \item{family}{a vector of character of the same length as
+  the number of dependent variables: "bernoulli",
+  "binomial", "poisson" or "gaussian" is allowed.}
+
+  \item{K}{number of components, default is one.}
+
+  \item{size}{describes the number of trials for the
+  binomial dependent variables. A (number of statistical
+  units * number of binomial dependent variables) matrix is
+  expected.}
+
+  \item{offset}{used for the poisson dependent variables. A
+  vector or a matrix of size: number of observations *
+  number of Poisson dependent variables is expected}
+
+  \item{subset}{an optional vector specifying a subset of
+  observations to be used in the fitting process}
+
+  \item{na.action}{a function which indicates what should
+  happen when the data contain NAs. The default is set to
+  na.omit.}
+
+  \item{crit}{a list of two elements : maxit and tol,
+  describing respectively the maximum number of iterations
+  and the tolerance convergence criterion for the Fisher
+  scoring algorithm. Default is set to 50 and 10e-6
+  respectively.}
+}
+\value{
+  an object of the SCGLR class.
+
+  \item{u}{matrix of size (number of regressors * number of
+  components), contains the component-loadings, i.e. the
+  coefficients of the regressors in the linear combination
+  giving each component}
+
+  \item{comp}{matrix of size (number of statistical units *
+  number of components) having the components as column
+  vectors}
+
+  \item{compr}{matrix of size (number of statistical units
+  * number of components) having the standardized
+  components as column vectors}
+
+  \item{gamma}{matrix of size (number of components *
+  number of dependent variables), contains the coefficients
+  of the regression on the components}
+
+  \item{beta}{matrix of size (number of regressors + 1
+  (intercept) * number of dependent variables), contains
+  the coefficients of the regression on the original
+  regressors $X$}
+
+  \item{lin.pred}{data.frame of size (number of statistical
+  units * number of dependent variables), the fitted linear
+  predictor}
+
+  \item{xFactors}{data.frame containing the nominal
+  regressors}
+
+  \item{xNumeric}{data.frame containing the quantitative
+  regressors}
+
+  \item{inertia}{matrix of size (number of components * 2),
+  contains the percentage and cumulative percentage of the
+  overall regressors' variance, captured by each component}
+
+  \item{deviance}{vector of length (number of dependent
+  variables), gives the deviance of each $y_k$'s GLM on the
+  components}
+}
+\description{
+  Calculate the components to predict all the dependent
+  variables
+}
+\examples{
+\dontrun{
+library(SCGLR)
+
+# load sample data
+data(genus)
+
+# get variable names from dataset
+n <- names(genus)
+ny <- n[grep("^gen",n)]    # Y <- names that begins with "gen"
+nx <- n[-grep("^gen",n)]   # X <- remaining names
+
+# remove "geology" and "surface" from nx
+# as surface is offset and we want to use geology as additional covariate
+nx <-nx[!nx\%in\%c("geology","surface")]
+
+# build multivariate formula
+# we also add "lat*lon" as computed covariate
+form <- multivariateFormula(ny,c(nx,"I(lat*lon)"),c("geology"))
+
+# define family
+fam <- rep("poisson",length(ny))
+
+genus.scglr <- scglr(formula=form,data = genus,family=fam, K=4,
+ offset=genus$surface)
+
+summary(genus.scglr)
+}
+}
+\references{
+  Bry X., Trottier C., Verron T. and Mortier F. (2013)
+  Supervised Component Generalized Linear Regression using
+  a PLS-extension of the Fisher scoring algorithm. Journal
+  of Multivariate Analysis.
+}
+
