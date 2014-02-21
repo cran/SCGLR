@@ -2,61 +2,61 @@
 \alias{plot.SCGLR}
 \title{SCGLR generic plot}
 \usage{
-  \method{plot}{SCGLR} (x, ..., style = "simple",
-    threshold = 0.8, plan = c(1, 2), factor = NULL,
-    predictors = NULL, covariates = NULL,
-    label.offset = 0.01, label.auto = T, label.size = 1,
-    expand = 1)
+\method{plot}{SCGLR}(x, ..., style = "simple", threshold = 0.8,
+  plane = c(1, 2), factor = NULL, predictors = NULL, covariates = NULL,
+  label.offset = 0.01, label.auto = T, label.size = 1, expand = 1)
 }
 \arguments{
-  \item{x}{an object from SCGLR class}
+  \item{x}{an object from SCGLR class.}
 
-  \item{...}{unused}
+  \item{\dots}{optional arguments.}
 
   \item{style}{describes which plot will be drawn. Style
   "simple" : correlation plot, "covariates" (to add
-  co-variates arrows), "circle" (to add the unit circle),
+  covariates arrows), "circle" (to add the unit circle),
   "observations" (to add observations), "threshold" (to
-  select co-variates whose sum of square correlations with
+  select covariates whose sum of square correlations with
   the two components of the plane exceeds the given
   threshold), "factor" (to add one the factors),
   "predictors" (to add linear predictor arrows). Can be
   given as a vector or list of strings (eg:
   c("simple","circle")) or comma separated string (eg:
   "simple,circle"). Style elements can also be abbreviated
-  (eg: "simp,cir")}
+  (eg: "simp,cir").}
 
-  \item{threshold}{a numeric value of the sum of square
-  correlations that, variables to be plotted must exceed}
+  \item{threshold}{a numeric value. All covariates whose
+  sum of square correlations with the two components of the
+  plane lower than this threshold will be ignored.}
 
-  \item{plan}{a size-2 vector (or comma separated string)
+  \item{plane}{a size-2 vector (or comma separated string)
   indicating which components are plotted (eg: c(1,2) or
-  "1,2")}
+  "1,2").}
 
-  \item{factor}{factor to show (default to first one)}
+  \item{factor}{factor to show (default to first one).}
 
   \item{predictors}{a vector of character to select the
-  linear predictors displayed}
+  linear predictors displayed.}
 
   \item{covariates}{a vector of character to select the
-  covariates displayed}
+  covariates displayed.}
 
   \item{label.offset}{offset by which labels should be
-  moved from tip of arrows}
+  moved from tip of arrows.}
 
   \item{label.auto}{whether or not the labels should be
-  rotated according to vector angle}
+  rotated according to vector angle.}
 
-  \item{label.size}{relative size for labels (fine tuning)}
+  \item{label.size}{relative size for labels (fine
+  tuning).}
 
   \item{expand}{expand factor for windows size, for example
-  to make room for clipped labels}
+  to make room for clipped labels.}
 }
 \value{
-  plot
+an object of class \code{ggplot}.
 }
 \description{
-  SCGLR generic plot
+SCGLR generic plot
 }
 \examples{
 \dontrun{

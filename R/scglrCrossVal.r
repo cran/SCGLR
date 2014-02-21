@@ -1,9 +1,9 @@
-#' Function that fits and selects the number of component by cross-validation
+#' Function that fits and selects the number of component by cross-validation.
 #' @export 
-#' @param formula an object of class "Formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted
-#' @param data the data frame to be modeled
+#' @param formula an object of class "Formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted.
+#' @param data the data frame to be modeled.
 #' @param family a vector of character of length q specifying the distributions of the responses. Bernoulli, binomial, poisson and gaussian are allowed.
-#' @param K number of components, default is one
+#' @param K number of components, default is one.
 #' @param nfolds number of folds, default is 5. 
 #' Although nfolds can be as large as the sample size (leave-one-out CV), 
 #' it is not recommended for large datasets. 
@@ -15,13 +15,14 @@
 #' @param size specifies the number of trials of the binomial variables included in the model.  A (n*qb) matrix is expected
 #' for qb binomial variables.
 #' @param offset used for the poisson dependent variables.
-#' A vector or a matrix of size: number of observations * number of Poisson dependent variables is expected
-#' @param subset an optional vector specifying a subset of observations to be used in the fitting process
-#' @param na.action a function which indicates what should happen when the data contain NAs. The default is set to the na.omit
-#' @param crit of maxit and tol, default is 50 and 10e-6. If responses are bernoulli variables only, tol should generally be increased.
-#' @param mc.cores max number of cores to use when using parallelization (sorry not available for Windows yet)
-#' @return  a matrix containing the criterion values for each response (rows) and each number of components (columns) 
-#' @author F. Mortier, C. Trottier, G. Cornu and X. Bry
+#' A vector or a matrix of size: number of observations * number of Poisson dependent variables is expected.
+#' @param subset an optional vector specifying a subset of observations to be used in the fitting process.
+#' @param na.action a function which indicates what should happen when the data contain NAs. The default is set to the \code{na.omit}.
+#' @param crit a list of two elements : maxit and tol, describing respectively the maximum number of iterations and 
+#' the tolerance convergence criterion for the Fisher scoring algorithm. Default is set to 50 and 10e-6 respectively. 
+#' @param mc.cores max number of cores to use when using parallelization (Not available in windows yet and strongly discouraged if in interactive mode).
+#' @return  a matrix containing the criterion values for each response (rows) and each number of components (columns).
+#' @references Bry X., Trottier C., Verron T. and Mortier F. (2013) Supervised Component Generalized Linear Regression using a PLS-extension of the Fisher scoring algorithm. \emph{Journal of Multivariate Analysis}, 119, 47-60.
 #' @examples \dontrun{
 #' library(SCGLR)
 #' 
@@ -58,8 +59,11 @@
 scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NULL,offset=NULL,subset=NULL,na.action=na.omit,crit=list(), mc.cores=1)
 {
   if( (mc.cores>1) && ((.Platform$OS.type == "windows") || (!require(parallel, quietly=T)))){
-    warning("parallel package is not available!")
+    warning("Sorry parallel package is not available!")
     mc.cores <- 1
+  }
+  if((mc.cores>1) && interactive()) {
+    warning("Using parallel package in interactive mode is strongly discouraged!")
   }
   
   checkLossFunction(type)

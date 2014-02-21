@@ -1,16 +1,19 @@
 #' @export
-#' @title Summary
+#' @title Summarizing SCGLR fits
+#' @description Summary method for class "SCGLR".
 #' @method summary SCGLR
 #' @S3method summary SCGLR
-#' @param object a SCGLR object from scglr() function
-#' @param digits minimal number of significant digits, see print.default.
-#' @param ... unused
-summary.SCGLR <- function(object,...,digits=3) {
-  print(object)
-  
-  dots <- list(...)
-  cutoff <- ifelse(is.null(dots[["cutoff"]]),0.05,dots[["cutoff"]])
-  
+#' @param object an object of class "SCGLR", usually a result of a call to \code{\link{scglr}}.
+#' @param \dots Not used.
+#' @return
+#' an object of class "summary.SCGLR".
+#'    \item{inertia}{inertia per component.}
+#'    \item{deviance}{deviance for each \eqn{Y_k}.}
+#'    \item{rho}{squared correlations with numerical covariates.}
+#'    \item{rho.pred}{squared correlations with linear predictors.}
+#'    \item{coef}{contains the coefficients of the regression on the components.}
+#'    \item{pvalue}{contains the pvalues of the coefficients of the regression on the components.}
+summary.SCGLR <- function(object, ...) {
   rho <- as.data.frame(cor(object$xNumeric,object$compr))
   rho.pred <- as.data.frame(cor(object$lin.pred,object$compr))
   ncomp <- ncol(object$compr)
@@ -25,21 +28,42 @@ summary.SCGLR <- function(object,...,digits=3) {
   tmp.pred <- unlist(apply(rho.pred,1,best_plane))
   rho <- data.frame(rho^2,best_plane=tmp[seq(1,length(tmp),2)],best_val=as.numeric(tmp[seq(2,length(tmp),2)])) 
   rho <- rho[order(rho$best_val,decreasing=TRUE),]
-  cat("\nSquared correlations with numerical covariates:\n")
-  print(rho,print.gap=2,digits=digits)
   rho.pred <- data.frame(rho.pred^2,best_plane=tmp.pred[seq(1,length(tmp.pred),2)],best_val=as.numeric(tmp.pred[seq(2,length(tmp.pred),2)]))
-  #rho.pred <- rho.pred[order(rho.pred$best_val,decreasing=TRUE),]
-  
-  cat("\nSquared correlations with linear predictors:\n")  
-  print(rho.pred,print.gap=2,digits=digits)
-  
+    
   coef <- sapply(object$gamma, function(x) x[,1])
-  signif <- sapply(object$gamma, function(x) x[,4])
-  coef[signif>=cutoff] <- NA
+  pvalue <- sapply(object$gamma, function(x) x[,4])
   colnames(coef)<-rownames(rho.pred)
   
-  cat("\nGLR gamma coefficients for dependant variables:\n")
-  print(coef,na.print="",digits=digits)
+  structure(list(
+    inertia=object$inertia,
+    deviance=object$deviance,
+    rho=rho,
+    rho.pred=rho.pred,
+    coef=coef,
+    pvalue=pvalue),
+  class="summary.SCGLR")
+}
 
-  invisible(list(rho,rho.pred,coef))
+#' @export
+#' @rdname summary.SCGLR
+#' @method print summary.SCGLR
+#' @S3method print summary.SCGLR
+#' @param x an object of class "summary.SCGLR", usually a result of a call to summary.SCGLR.
+#' @param digits the number of significant digits to use when printing.
+#' @param cutoff print coefficients with pvalue lower than or equal to cutoff (default to 1).
+print.summary.SCGLR <- function(x, digits=3, cutoff=1, ...) {
+
+  cat("Squared correlations with numerical covariates:\n")
+  print(x$rho,print.gap=2,digits=digits)
+  
+  cat("\nSquared correlations with linear predictors:\n")  
+  print(x$rho.pred,print.gap=2,digits=digits)
+  
+  coef<-x$coef
+  coef[x$pvalue>=cutoff] <- NA
+  
+  cat("\nCoefficients for dependant variables:\n")
+  print(coef,na.print="",digits=digits)
+  cat("\n")
+  invisible(x)
 }

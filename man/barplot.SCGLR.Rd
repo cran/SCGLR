@@ -1,22 +1,24 @@
 \name{barplot.SCGLR}
 \alias{barplot.SCGLR}
-\title{barplot}
+\title{Barplot of percent of overall X variance captured by component}
 \usage{
-  \method{barplot}{SCGLR} (height, ...)
+\method{barplot}{SCGLR}(height, ...)
 }
 \arguments{
-  \item{height}{SCGLR result}
+  \item{height}{object of class 'SCGLR', usually a result
+  of running \code{\link{scglr}}.}
 
-  \item{...}{unused}
+  \item{\dots}{optional arguments.}
 }
 \value{
-  plot
+an object of class ggplot.
 }
 \description{
-  barplot
+Barplot of percent of overall X variance captured by
+component
 }
 \seealso{
-  For barplot application see examples in
-  \code{\link{plot.SCGLR}}
+For barplot application see examples in
+\code{\link{plot.SCGLR}}.
 }
 

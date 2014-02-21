@@ -1,25 +1,26 @@
-#' @title Estimation algorithm for K components
-#' @description calculates the K components by iteratively calling function oneComponent 
-#' @export
-#' @param X matrix (n*p) containing the standardized covariates
-#' @param Y matrix (n*q) containing dependent variables
-#' @param AX matrix of additional covariates used in the generalized regression but not entering the linear 
-#' combinations giving components
-#' @param K integer specifying the number of components
-#' @param family a vector of the same length as the number of responses containing characters 
-#' identifying the distribution families of the dependent variables.
-#' "bernoulli", "binomial", "poisson" or "gaussian" are allowed.
-#' @param size matrix of size statistical units * number of binomial responses, giving the number of trials 
-#' for binomial dependent variables. 
-#' @param offset used for the poisson dependent variables.
-#' A vector or a matrix of size: number of observations * number of Poisson dependent variables is expected
-#' @param crit a list of maxit and tol, default is 50 and 10e-6. If responses are bernoulli variables only, tol should generally be increased
-#' @return a list 
-#' @return \item{u}{matrix of size (number of regressors * number of components), contains the component-loadings, 
-#' i.e. the coefficients of the regressors in the linear combination giving each component}
-#' @return \item{comp}{matrix of size (number of statistical units * number of components) having the components as column vectors}
-#' @return \item{compr}{matrix of size (number of statistical units * number of components) having the standardized components as column vectors}
-#' @return \item{ds}{the final value of the regularization degree}
+# @title Estimation algorithm for K components
+# @description calculates the K components by iteratively calling function oneComponent 
+# @export
+# @param X matrix (n*p) containing the standardized covariates
+# @param Y matrix (n*q) containing dependent variables
+# @param AX matrix of additional covariates used in the generalized regression but not entering the linear 
+# combinations giving components
+# @param K integer specifying the number of components
+# @param family a vector of the same length as the number of responses containing characters 
+# identifying the distribution families of the dependent variables.
+# "bernoulli", "binomial", "poisson" or "gaussian" are allowed.
+# @param size matrix of size statistical units * number of binomial responses, giving the number of trials 
+# for binomial dependent variables. 
+# @param offset used for the poisson dependent variables.
+# A vector or a matrix of size: number of observations * number of Poisson dependent variables is expected
+# @param crit crit a list of two elements : maxit and tol, describing respectively the maximum number of iterations and 
+# the tolerance convergence criterion for the Fisher scoring algorithm. Default is set to 50 and 10e-6 respectively. 
+# @return a list 
+# @return \item{u}{matrix of size (number of regressors * number of components), contains the component-loadings, 
+# i.e. the coefficients of the regressors in the linear combination giving each component}
+# @return \item{comp}{matrix of size (number of statistical units * number of components) having the components as column vectors}
+# @return \item{compr}{matrix of size (number of statistical units * number of components) having the standardized components as column vectors}
+# @return \item{ds}{the final value of the regularization degree}
 kComponents <- function(X,Y,AX,K,family,size=NULL,offset=NULL,crit=list())
 {
   n<-dim(X)[1]

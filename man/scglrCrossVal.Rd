@@ -1,24 +1,23 @@
 \name{scglrCrossVal}
 \alias{scglrCrossVal}
-\title{Function that fits and selects the number of component by cross-validation}
+\title{Function that fits and selects the number of component by cross-validation.}
 \usage{
-  scglrCrossVal(formula, data, family, K = 1, nfolds = 5,
-    type = "mspe", size = NULL, offset = NULL,
-    subset = NULL, na.action = na.omit, crit = list(),
-    mc.cores = 1)
+scglrCrossVal(formula, data, family, K = 1, nfolds = 5, type = "mspe",
+  size = NULL, offset = NULL, subset = NULL, na.action = na.omit,
+  crit = list(), mc.cores = 1)
 }
 \arguments{
   \item{formula}{an object of class "Formula" (or one that
   can be coerced to that class): a symbolic description of
-  the model to be fitted}
+  the model to be fitted.}
 
-  \item{data}{the data frame to be modeled}
+  \item{data}{the data frame to be modeled.}
 
   \item{family}{a vector of character of length q
   specifying the distributions of the responses. Bernoulli,
   binomial, poisson and gaussian are allowed.}
 
-  \item{K}{number of components, default is one}
+  \item{K}{number of components, default is one.}
 
   \item{nfolds}{number of folds, default is 5. Although
   nfolds can be as large as the sample size (leave-one-out
@@ -39,29 +38,32 @@
 
   \item{offset}{used for the poisson dependent variables. A
   vector or a matrix of size: number of observations *
-  number of Poisson dependent variables is expected}
+  number of Poisson dependent variables is expected.}
 
   \item{subset}{an optional vector specifying a subset of
-  observations to be used in the fitting process}
+  observations to be used in the fitting process.}
 
   \item{na.action}{a function which indicates what should
   happen when the data contain NAs. The default is set to
-  the na.omit}
+  the \code{na.omit}.}
 
-  \item{crit}{of maxit and tol, default is 50 and 10e-6. If
-  responses are bernoulli variables only, tol should
-  generally be increased.}
+  \item{crit}{a list of two elements : maxit and tol,
+  describing respectively the maximum number of iterations
+  and the tolerance convergence criterion for the Fisher
+  scoring algorithm. Default is set to 50 and 10e-6
+  respectively.}
 
   \item{mc.cores}{max number of cores to use when using
-  parallelization (sorry not available for Windows yet)}
+  parallelization (Not available in windows yet and
+  strongly discouraged if in interactive mode).}
 }
 \value{
-  a matrix containing the criterion values for each
-  response (rows) and each number of components (columns)
+a matrix containing the criterion values for each response
+(rows) and each number of components (columns).
 }
 \description{
-  Function that fits and selects the number of component by
-  cross-validation
+Function that fits and selects the number of component by
+cross-validation.
 }
 \examples{
 \dontrun{
@@ -98,7 +100,10 @@ K.cv <- which.min(mean.crit)-1
 #plot(mean.crit, type="l")
 }
 }
-\author{
-  F. Mortier, C. Trottier, G. Cornu and X. Bry
+\references{
+Bry X., Trottier C., Verron T. and Mortier F. (2013)
+Supervised Component Generalized Linear Regression using a
+PLS-extension of the Fisher scoring algorithm.
+\emph{Journal of Multivariate Analysis}, 119, 47-60.
 }
 
