@@ -2,28 +2,28 @@
 \alias{multivariatePredictGlm}
 \title{Function that predicts the responses from the covariates for a new sample}
 \usage{
-  multivariatePredictGlm(Xnew, family, beta, offset = NULL)
+multivariatePredictGlm(Xnew, family, beta, offset = NULL)
 }
 \arguments{
   \item{Xnew}{a data frame containing the values of the
-  covariates for the new sample}
+  covariates for the new sample.}
 
   \item{family}{a vector of character specifying the
-  distributions of the responses}
+  distributions of the responses.}
 
   \item{beta}{the matrix of coefficients estimated from the
-  calibration sample}
+  calibration sample.}
 
   \item{offset}{used for the poisson dependent variables. A
   vector or a matrix of size: number of observations *
-  number of Poisson dependent variables is expected}
+  number of Poisson dependent variables is expected.}
 }
 \value{
-  a matrix of predicted values
+a matrix of predicted values.
 }
 \description{
-  Function that predicts the responses from the covariates
-  for a new sample
+Function that predicts the responses from the covariates
+for a new sample
 }
 \examples{
 \dontrun{
@@ -56,7 +56,7 @@ fam <- rep("poisson",length(ny))
 genus.scglr <- scglr(formula=form, data=genus, family=fam, K=4,
  offset=genus$surface, subset=sub_fit)
 
-# xnew, the design matrix associated to sub sample used for prediction
+# xnew, the design matrix associated to sub-sample used for prediction
 # rhs parameters is introduced to take into account that the covariate
 # of the formula is composed of two differents sets
 xnew <- model.matrix(form, data=genus[sub,], rhs=1:2)[,-1]

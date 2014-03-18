@@ -1,35 +1,34 @@
 #' @title Function that fits the scglr model
-#' @description Calculate the components to predict all the dependent variables
+#' @description Calculates the components to predict all the dependent variables.
 #' @export scglr
-#' @param formula an object of class "Formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted
-#' @param data  a data frame to be modeled
+#' @param formula an object of class \code{Formula} (or one that can be coerced to that class): a symbolic description of the model to be fitted.
+#' @param data  a data frame to be modeled.
 #' @param family a vector of character of the same length as the number of dependent variables: 
 #' "bernoulli", "binomial", "poisson" or "gaussian" is allowed.
 #' @param K number of components, default is one.
 #' @param size describes the number of trials for the binomial dependent variables. 
 #' A (number of statistical units * number of binomial dependent variables) matrix is expected.
 #' @param offset used for the poisson dependent variables.
-#' A vector or a matrix of size: number of observations * number of Poisson dependent variables is expected
-#' @param subset an optional vector specifying a subset of observations to be used in the fitting process
-#' @param na.action a function which indicates what should happen when the data contain NAs. The default is set to na.omit.
+#' A vector or a matrix of size: number of observations * number of Poisson dependent variables is expected.
+#' @param subset an optional vector specifying a subset of observations to be used in the fitting process.
+#' @param na.action a function which indicates what should happen when the data contain NAs. The default is set to \code{na.omit}.
 #' @param crit a list of two elements : maxit and tol, describing respectively the maximum number of iterations and 
 #' the tolerance convergence criterion for the Fisher scoring algorithm. Default is set to 50 and 10e-6 respectively. 
 #' @return an object of the SCGLR class.
 #' @return \item{u}{matrix of size (number of regressors * number of components), contains the component-loadings, 
-#' i.e. the coefficients of the regressors in the linear combination giving each component}
-#' @return \item{comp}{matrix of size (number of statistical units * number of components) having the components as column vectors}
-#' @return \item{compr}{matrix of size (number of statistical units * number of components) having the standardized components as column vectors}
-#' @return \item{gamma}{matrix of size  (number of components * number of dependent variables), contains the coefficients of the regression on the components}
+#' i.e. the coefficients of the regressors in the linear combination giving each component.}
+#' @return \item{comp}{matrix of size (number of statistical units * number of components) having the components as column vectors.}
+#' @return \item{compr}{matrix of size (number of statistical units * number of components) having the standardized components as column vectors.}
+#' @return \item{gamma}{list of length number of dependant variables. Each element is a matrix of coefficients, standard errors, z-values and p-values.}
 #' @return \item{beta}{matrix of size (number of regressors + 1 (intercept) * number of dependent variables), contains the coefficients 
-#' of the regression on the original regressors $X$}
-#' @return \item{lin.pred}{data.frame of size (number of statistical units * number of dependent variables), the fitted linear predictor}
-#' @return \item{xFactors}{data.frame containing the nominal regressors}
-#' @return \item{xNumeric}{data.frame containing the quantitative regressors}
+#' of the regression on the original regressors X.}
+#' @return \item{lin.pred}{data.frame of size (number of statistical units * number of dependent variables), the fitted linear predictor.}
+#' @return \item{xFactors}{data.frame containing the nominal regressors.}
+#' @return \item{xNumeric}{data.frame containing the quantitative regressors.}
 #' @return \item{inertia}{matrix of size (number of components * 2), contains the percentage and cumulative percentage 
-#' of the overall regressors' variance, captured by each component}
-#' @return \item{deviance}{vector of length (number of dependent variables), gives the deviance of each $y_k$'s GLM on the components}
-#' @references Bry X., Trottier C., Verron T. and Mortier F. (2013) Supervised Component Generalized Linear Regression using a PLS-extension of the Fisher scoring algorithm. Journal of Multivariate Analysis.
-#' @examples \dontrun{
+#' of the overall regressors' variance, captured by each component.}
+#' @return \item{deviance}{vector of length (number of dependent variables), gives the deviance of each \eqn{y_k}'s GLM on the components.}
+#' @references Bry X., Trottier C., Verron T. and Mortier F. (2013) Supervised Component Generalized Linear Regression using a PLS-extension of the Fisher scoring algorithm. \emph{Journal of Multivariate Analysis}, 119, 47-60.#' @examples \dontrun{
 #' library(SCGLR)
 #' 
 #' # load sample data

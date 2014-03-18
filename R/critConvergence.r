@@ -1,9 +1,10 @@
-#' @title Auxiliary function tuning the convergence of scglr
-#' @description Function tuning the convergence of scglr
+#' @title Auxiliary for controlling SCGLR fitting
+#' @description Auxiliary function for \code{scglr} fitting used to 
+#' construct a convergence control argument.
 #' @export 
-#' @param tol positive convergence threshold
-#' @param maxit integer, maximum number of iterations
-#' @return a list containing elements named as the arguments
+#' @param tol positive convergence threshold.
+#' @param maxit integer, maximum number of iterations.
+#' @return a list containing elements named as the arguments.
 critConvergence <- function (tol = 1e-6, maxit = 50) 
 {
   if (!is.numeric(tol) || tol <= 0) 

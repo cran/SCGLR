@@ -1,17 +1,17 @@
 #' @title Function that calculates cross-validation selection criteria
 #' @export
-#' @param ynew data matrix corresponding to the observations used as test sample
-#' @param pred predicted value of the linear predictor obtained from Xnew and the estimated parameters
+#' @param ynew data matrix corresponding to the observations used as test sample.
+#' @param pred predicted value of the linear predictor obtained from Xnew and the estimated parameters.
 #' @param family a vector of the same length as the number of responses containing characters 
 #' identifying the distribution families of the dependent variables.
 #' "bernoulli", "binomial", "poisson" or "gaussian" are allowed.
 #' @param type information criterion used. Likelihood, aic, bic, aicc or
-#'  Mean Square Prediction Error (mspe) are defined. auc also defined for Bernoulli cases only.
+#'  Mean Square Prediction Error (mspe) are defined. Area Under ROC Curve (auc) also defined for Bernoulli cases only.
 #' @param size describes the number of trials for the binomial dependent variables. 
 #' A (number of statistical units * number of binomial dependent variables) matrix is expected.
-#' @param npar number of parameters used for penalisation
+#' @param npar number of parameters used for penalisation.
 #' @return a matrix containing the criterion value for each dependent variable (row) 
-#' and each number of components (column)
+#' and each number of components (column).
 infoCriterion <- function(ynew,pred,family,type,size=NULL,npar=0)
 {
   if(type=="auc")

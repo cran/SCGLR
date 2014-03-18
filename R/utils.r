@@ -1,8 +1,7 @@
-#' weighted scale functions
-#' @export
-#' @param x vector to scale
-#' @param w weight
-#' @return scaled vector
+# weighted scale functions
+# @param x vector to scale
+# @param w weight
+# @return scaled vector
 wtScale <-function(x,w)
 {
   xc=x-sum(w*x)
@@ -11,11 +10,10 @@ wtScale <-function(x,w)
 return(xcr)                                   
 }
 
-#' utils functions
-#' @export
-#' @param x vector to center
-#' @param w weight
-#' @return centered vector
+# utils functions
+# @param x vector to center
+# @param w weight
+# @return centered vector
 wtCenter=function(x,w)
   {
   xc=x-sum(w*x)

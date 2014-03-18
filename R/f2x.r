@@ -1,14 +1,14 @@
-#' @title Regression coefficients conversion
-#' @description converts the regression coefficients associated with the components 
-#' into coefficients associated with the initial regressors
-#' @export 
-#' @param Xcr matrix of the standardized regressors
-#' @param centerx vector of the regressors' means
-#' @param invsqrtm metric matrix M^(-1/2)
-#' @param gamma (generalized) regression coefficients associated with the components 
-#' @param u matrix of the component coordinates on Xcr (component = Xcr * u) 
-#' @param comp matrix of the components
-#' @return beta matrix containing the regression coefficients associated with the regressors X
+# @title Regression coefficients conversion
+# @description converts the regression coefficients associated with the components 
+# into coefficients associated with the initial regressors
+# @export 
+# @param Xcr matrix of the standardized regressors
+# @param centerx vector of the regressors' means
+# @param invsqrtm metric matrix M^(-1/2)
+# @param gamma (generalized) regression coefficients associated with the components 
+# @param u matrix of the component coordinates on Xcr (component = Xcr * u) 
+# @param comp matrix of the components
+# @return beta matrix containing the regression coefficients associated with the regressors X
 f2x <- function(Xcr,centerx,invsqrtm,gamma,u,comp)
 {
   n <- dim(Xcr)[1]

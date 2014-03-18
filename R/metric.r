@@ -1,6 +1,6 @@
-#'@title Function that computes a submatrix of metric M^(-1/2)
-#'@export 
-#'@param x the column vector of a regressor or factor
+#@title Function that computes a submatrix of metric M^(-1/2)
+#@export 
+#@param x the column vector of a regressor or factor
 metricBloc <- function(x){
   z <- model.matrix(~x)[,-1,drop=FALSE]
   z <- scale(z,center=TRUE,scale=FALSE)
@@ -9,9 +9,9 @@ metricBloc <- function(x){
 }
 
 
-#'@title Function that computes M^(-1/2)
-#'@export 
-#'@param data data.frame containing all covariates
+#@title Function that computes M^(-1/2)
+#@export 
+#@param data data.frame containing all covariates
 metric <- function(data){
   z <- sapply(data,metricBloc)
   z <- bdiag(z)

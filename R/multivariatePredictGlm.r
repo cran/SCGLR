@@ -1,11 +1,11 @@
 #' @title Function that predicts the responses from the covariates for a new sample
 #' @export
-#' @param Xnew a data frame containing the values of the covariates for the new sample
-#' @param family a vector of character specifying the distributions of the responses
-#' @param beta the matrix of coefficients estimated from the calibration sample
+#' @param Xnew a data frame containing the values of the covariates for the new sample.
+#' @param family a vector of character specifying the distributions of the responses.
+#' @param beta the matrix of coefficients estimated from the calibration sample.
 #' @param offset used for the poisson dependent variables.
-#' A vector or a matrix of size: number of observations * number of Poisson dependent variables is expected
-#' @return a matrix of predicted values
+#' A vector or a matrix of size: number of observations * number of Poisson dependent variables is expected.
+#' @return a matrix of predicted values.
 #' @examples \dontrun{
 #' library(SCGLR)
 #' 
@@ -36,7 +36,7 @@
 #' genus.scglr <- scglr(formula=form, data=genus, family=fam, K=4, 
 #'  offset=genus$surface, subset=sub_fit)
 #' 
-#' # xnew, the design matrix associated to sub sample used for prediction
+#' # xnew, the design matrix associated to sub-sample used for prediction
 #' # rhs parameters is introduced to take into account that the covariate 
 #' # of the formula is composed of two differents sets
 #' xnew <- model.matrix(form, data=genus[sub,], rhs=1:2)[,-1]

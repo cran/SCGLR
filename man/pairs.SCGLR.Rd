@@ -1,30 +1,31 @@
 \name{pairs.SCGLR}
 \alias{pairs.SCGLR}
-\title{pairs}
+\title{Pairwise scglr plot on components}
 \usage{
-  \method{pairs}{SCGLR} (x, ..., nrow = NULL, ncol = NULL,
-    plans = NULL)
+\method{pairs}{SCGLR}(x, ..., nrow = NULL, ncol = NULL, components = NULL)
 }
 \arguments{
-  \item{x}{SCGLR result to plot}
+  \item{x}{object of class 'SCGLR', usually a result of
+  running \code{\link{scglr}}.}
 
-  \item{...}{unused}
+  \item{\dots}{optionally, further arguments forwarded to
+  \code{link{plot.SCGLR}}.}
 
-  \item{nrow}{number of rows of the grid layout}
+  \item{nrow}{number of rows of the grid layout.}
 
-  \item{ncol}{number of columns of the grid layout}
+  \item{ncol}{number of columns of the grid layout.}
 
-  \item{plans}{vector of integer to select components to
-  use}
+  \item{components}{vector of integers selecting components
+  to plot (default is all components).}
 }
 \value{
-  plot
+an object of class ggplot.
 }
 \description{
-  pairs
+Pairwise scglr plot on components
 }
 \seealso{
-  For pairs application see examples in
-  \code{\link{plot.SCGLR}}
+For pairs application see examples in
+\code{\link{plot.SCGLR}}
 }
 

@@ -1,19 +1,20 @@
-#' @title Function that calculates the current scglr-component
-#' @export 
-#' @param X a matrix (n*p) containing covariates standardized through M^(-1/2)
-#' @param Y a matrix (n*q) containing dependent variables
-#' @param AX a matrix containing additional covariates 
-#' @param family a vector of charater of length q specifying the distributions of the responses. 
-#' Bernoulli, binomial, Poisson and gaussian are allowed.
-#' @param size specifies the numbers of trials of the binomial responses.  A (n*qb) matrix is expected
-#'  for qb binomial variables.
-#' @param offset used for the poisson dependent variables.
-#' A vector or a matrix of size: number of observations * number of Poisson dependent variables is expected
-#' @param ds an integer specifying the degree to which structural strength in X is taken into account
-#' when calculating the component
-#' @param crit a list of maxit and tol, default is 50 and 10e-6. If responses are bernoulli variables only, tol should generally be increased.
-#' @return the unit vector of loadings associated with the current component, 
-#' i.e. the coefficients of the regressors in the linear combination giving each component
+# @title Function that calculates the current scglr-component
+# @export 
+# @param X a matrix (n*p) containing covariates standardized
+# @param Y a matrix (n*q) containing dependent variables
+# @param AX a matrix containing additional covariates 
+# @param family a vector of charater of length q specifying the distributions of the responses. 
+# Bernoulli, binomial, Poisson and gaussian are allowed.
+# @param size specifies the numbers of trials of the binomial responses.  A (n*qb) matrix is expected
+#  for qb binomial variables.
+# @param offset used for the poisson dependent variables.
+# A vector or a matrix of size: number of observations * number of Poisson dependent variables is expected
+# @param ds an integer specifying the degree to which structural strength in X is taken into account
+# when calculating the component
+# @param crit a list of two elements : maxit and tol, describing respectively the maximum number of iterations and 
+# the tolerance convergence criterion for the Fisher scoring algorithm. Default is set to 50 and 10e-6 respectively. 
+# @return the unit vector of loadings associated with the current component, 
+# i.e. the coefficients of the regressors in the linear combination giving each component
 oneComponent <- function(X,Y,AX,family,size=NULL,offset=NULL,ds,crit)
 {
   ##cst control and iteration

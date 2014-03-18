@@ -26,8 +26,8 @@ fam <- rep("poisson",length(ny))
 # fit the model
 genus.scglr <- scglr(formula=form, data=genus, family=fam, K=4, offset=genus$surface, subset=sub_fit)
 
-#xnew, the design matrix associated to sub sample used for prediction
-# note rhs parameters is introduced to take into account that the covariate part of
+#xnew, the design matrix associated to sub-sample used for prediction
+# note rhs parameter is introduced to take into account that the covariate part of
 # the formula is composed of two differents sets
 xnew <- model.matrix(form, data=genus[sub,], rhs=1:2)[,-1]
 
@@ -40,7 +40,7 @@ plot(cor.scglr, col="red",ylim=c(-1,1))
 genus.glm <- multivariateGlm(formula=form, data=genus, family=fam, offset=genus$surface, subset=sub_fit)
 coefs <- sapply(genus.glm,coef)
 
-# note rhs parameters is introduced to take into account that the covariate part of
+# note rhs parameter is introduced to take into account that the covariate part of
 # the formula is composed of two differents sets
 pred.glm <- multivariatePredictGlm(xnew,family=fam,beta=coefs,offset=genus$surface[sub])
 cor.glm <- diag(cor(pred.glm,genus[sub,ny]))

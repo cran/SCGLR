@@ -1,15 +1,16 @@
 \name{print.SCGLR}
 \alias{print.SCGLR}
-\title{Print}
+\title{Print SCGLR object}
 \usage{
-  \method{print}{SCGLR} (x, ...)
+\method{print}{SCGLR}(x, ...)
 }
 \arguments{
-  \item{x}{SCGLR result to print}
+  \item{x}{object of class 'SCGLR', usually a result of
+  running \code{\link{scglr}}.}
 
-  \item{...}{unused}
+  \item{\dots}{Not used.}
 }
 \description{
-  Print
+Prints inertia per component and deviance for each Y.
 }
 

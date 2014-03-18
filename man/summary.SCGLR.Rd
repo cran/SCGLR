@@ -1,18 +1,38 @@
 \name{summary.SCGLR}
+\alias{print.summary.SCGLR}
 \alias{summary.SCGLR}
-\title{Summary}
+\title{Summarizing SCGLR fits}
 \usage{
-  \method{summary}{SCGLR} (object, ..., digits = 3)
+\method{summary}{SCGLR}(object, ...)
+
+\method{print}{summary.SCGLR}(x, digits = 3, cutoff = 1, ...)
 }
 \arguments{
-  \item{object}{a SCGLR object from scglr() function}
+  \item{object}{an object of class "SCGLR", usually a
+  result of a call to \code{\link{scglr}}.}
 
-  \item{digits}{minimal number of significant digits, see
-  print.default.}
+  \item{\dots}{Not used.}
 
-  \item{...}{unused}
+  \item{x}{an object of class "summary.SCGLR", usually a
+  result of a call to summary.SCGLR.}
+
+  \item{digits}{the number of significant digits to use
+  when printing.}
+
+  \item{cutoff}{print coefficients with pvalue lower than
+  or equal to cutoff (default to 1).}
+}
+\value{
+an object of class "summary.SCGLR".  \item{inertia}{inertia
+per component.} \item{deviance}{deviance for each
+\eqn{Y_k}.} \item{rho}{squared correlations with numerical
+covariates.} \item{rho.pred}{squared correlations with
+linear predictors.} \item{coef}{contains the coefficients
+of the regression on the components.}
+\item{pvalue}{contains the pvalues of the coefficients of
+the regression on the components.}
 }
 \description{
-  Summary
+Summary method for class "SCGLR".
 }
 
