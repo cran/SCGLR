@@ -2,7 +2,6 @@
 #' @title Print SCGLR object
 #' @description Prints inertia per component and deviance for each Y.
 #' @method print SCGLR
-#' @S3method print SCGLR
 #' @param x object of class 'SCGLR', usually a result of running \code{\link{scglr}}.
 #' @param \dots Not used.
 print.SCGLR <- function(x, ...) {

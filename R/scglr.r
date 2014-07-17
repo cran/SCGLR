@@ -14,7 +14,12 @@
 #' @param na.action a function which indicates what should happen when the data contain NAs. The default is set to \code{na.omit}.
 #' @param crit a list of two elements : maxit and tol, describing respectively the maximum number of iterations and 
 #' the tolerance convergence criterion for the Fisher scoring algorithm. Default is set to 50 and 10e-6 respectively. 
+#' @param method Regularization criterion type. Object of class "method.SCGLR" 
+#' built by \code{\link{methodLPLS}} for PLS-type approach or \code{\link{methodSR}} for Structural Relevance.
 #' @return an object of the SCGLR class.
+#' @return The function \code{\link{summary}} (i.e., \code{\link{summary.SCGLR}}) can be used to obtain or print a summary of the results.
+#' @return The generic accessor functions \code{\link{coef}} can be used to extract various useful features of the value returned by \code{scglr}.
+#' @return An object of class "\code{SCGLR}" is a list containing following components:
 #' @return \item{u}{matrix of size (number of regressors * number of components), contains the component-loadings, 
 #' i.e. the coefficients of the regressors in the linear combination giving each component.}
 #' @return \item{comp}{matrix of size (number of statistical units * number of components) having the components as column vectors.}
@@ -28,7 +33,8 @@
 #' @return \item{inertia}{matrix of size (number of components * 2), contains the percentage and cumulative percentage 
 #' of the overall regressors' variance, captured by each component.}
 #' @return \item{deviance}{vector of length (number of dependent variables), gives the deviance of each \eqn{y_k}'s GLM on the components.}
-#' @references Bry X., Trottier C., Verron T. and Mortier F. (2013) Supervised Component Generalized Linear Regression using a PLS-extension of the Fisher scoring algorithm. \emph{Journal of Multivariate Analysis}, 119, 47-60.#' @examples \dontrun{
+#' @references Bry X., Trottier C., Verron T. and Mortier F. (2013) Supervised Component Generalized Linear Regression using a PLS-extension of the Fisher scoring algorithm. \emph{Journal of Multivariate Analysis}, 119, 47-60.
+#' @examples \dontrun{
 #' library(SCGLR)
 #' 
 #' # load sample data
@@ -55,7 +61,7 @@
 #' 
 #' summary(genus.scglr)
 #' }
-scglr <-  function(formula,data,family,K=1,size=NULL,offset=NULL,subset=NULL,na.action=na.omit,crit=list())
+scglr <-  function(formula,data,family,K=1,size=NULL,offset=NULL,subset=NULL,na.action=na.omit,crit=list(),method=methodSR())
 {
   #todo family "toto" -> rep("toto",ny)
   cl <- match.call()
@@ -66,7 +72,7 @@ scglr <-  function(formula,data,family,K=1,size=NULL,offset=NULL,subset=NULL,na.
   form <- as.Formula(formula)
   mf$formula <- form
   if(!is.null(size))  size <- as.matrix(size)
-
+  
   if(!is.null(offset)) {
     if(is.vector(offset)) {
       offset <- matrix(offset,nrow(data), sum(family=="poisson"))
@@ -82,9 +88,14 @@ scglr <-  function(formula,data,family,K=1,size=NULL,offset=NULL,subset=NULL,na.
   crit <- do.call("critConvergence", crit)
   y <- as.matrix(model.part(form,data=mf,lhs=1))
   x <- model.part(form, data=mf, rhs = 1)
-  if(sum(length(form))==3){
+  if(length(form)[2]==2){
     AX <- model.part(form, data=mf, rhs = 2)
+    namesAx <- names(AX)
     AX <- model.matrix(form,data=mf,rhs=2)[,-1]
+    if(is.vector(AX)) {
+      AX <- matrix(AX,ncol=1)
+      colnames(AX) <- namesAx
+    }
   }else{
     AX <- NULL
   }
@@ -140,13 +151,13 @@ scglr <-  function(formula,data,family,K=1,size=NULL,offset=NULL,subset=NULL,na.
   offset <- model.extract(mf,"offset")
   
   kComponent.fit <- kComponents(X=xcr,Y=y,AX=AX,K=K,family=family,size=size,
-                                offset=offset,crit=crit)
+                                offset=offset,crit=crit,method=method)
   if(is.null(AX)){
     gamma.fit <- multivariateGlm.fit(Y=y,comp=kComponent.fit$comp,family=family,
-                               offset=offset,size=size) 
-  }else{
+                                     offset=offset,size=size) 
+  }else{    
     gamma.fit <- multivariateGlm.fit(Y=y,comp=cbind(kComponent.fit$comp,AX),family=family,
-                                 offset=offset,size=size)     
+                                     offset=offset,size=size)       
   }
   gamma.coefs <- sapply(gamma.fit,coef)
   deviance <- sapply(gamma.fit,deviance)
@@ -159,14 +170,15 @@ scglr <-  function(formula,data,family,K=1,size=NULL,offset=NULL,subset=NULL,na.
   inertia <- inertia^2
   inertia <- colMeans(inertia)
   names(inertia) <- colnames(kComponent.fit$compr)
-
+  beta <- as.data.frame(rbind(beta.coefs,as.matrix(gamma.coefs[-c(1:(K+1)),])))
+  rownames(beta) <- c(rownames(beta.coefs),colnames(AX))
   out <- list(
     call=cl,
     u=as.data.frame(kComponent.fit$u),
     comp=as.data.frame(kComponent.fit$comp),
     compr=as.data.frame(kComponent.fit$compr),
     gamma=lapply(gamma.fit, function(x) summary(x)$coefficients),
-    beta=as.data.frame(rbind(beta.coefs,gamma.coefs[-c(1:(K+1)),])), 
+    beta=beta, 
     lin.pred= as.data.frame(cbind(1,x)%*%beta.coefs),
     xFactors=as.data.frame(xFactors),
     xNumeric=as.data.frame(xNumeric),

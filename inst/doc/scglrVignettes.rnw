@@ -1,4 +1,5 @@
-%\VignetteIndexEntry{SCGLR Paper submitted to Journal of Statistical Software}
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Introduction to SCGLR}
 \documentclass[a4paper]{article}
 \usepackage{amsmath}
 \usepackage{graphicx,subfig}
@@ -6,10 +7,10 @@
 %\usepackage[authoryear,round]{natbib}
 \usepackage{tabularx}
 \usepackage{diagbox}
-\usepackage{draftwatermark}
-\SetWatermarkText{Submitted}
-\SetWatermarkScale{1}
-\usepackage[ruled]{algorithm2e}
+%\usepackage{draftwatermark}
+%\SetWatermarkText{Submitted}
+%\SetWatermarkScale{1}
+%\usepackage[ruled]{algorithm2e}
 \usepackage{url}
 
 
@@ -22,33 +23,29 @@
 
 
 
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% declarations for jss.cls %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-%
-
-%% almost as usual
 
 \title{\pkg{SCGLR} - An R Package for Supervised Component Generalized Linear Regression}
 
-\author{Fr\'{e}d\'{e}ric Mortier  \\ CIRAD,  Catherine Trottier \\ University Montpellier III and I3M, Guillaume Cornu \\ CIRAD and Xavier Bry \\ I3M}
-
-
-% ^\footnote{  Fr\'ed\'eric Mortier
-%   UPR "Biens et Services des Ecosyst\`emes Forestiers tropicaux (B\&SEF)\\
-%   D\'epartement Environnements et Soci\'et\'es du CIRAD\\
-% 	Campus International de Baillarguet, TA C-105/D\\
-% 	34398 Montpellier Cedex 5 - France\\
-%   E-mail: \email{fmortier@cirad.fr}
+\author{
+  Fr\'{e}d\'{e}ric Mortier\thanks{UPR Biens et Services des Ecosyst\`emes Forestiers tropicaux (B\&SEF), D\'epartement Environnements et Soci\'et\'es du CIRAD, Campus International de Baillarguet, TA C-105/D, FR-34398 Montpellier Cedex 5},
+  Catherine Trottier\thanks{UFR IV, Universit\'e Paul Val\'ery, Route de Mende, FR-34199 Montpellier Cedex 5}
+\thanks{UMR I3M, Equipe Probabilit\'es et Statistique, Place Eug\`ene Bataillon, FR-34095 Montpellier Cedex 5},
+  Guillaume Cornu\footnotemark[1]
+  and Xavier Bry\footnotemark[3]
+}
 
 \begin{document}
 
-%\SweaveOpts{concordance=FALSE}
 \maketitle
-\SweaveOpts{concordance=FALSE, prefix.string=figures/scglr,keep.source=TRUE}
-\SweaveOpts{concordance=FALSE, prefix.string=scglr,keep.source=TRUE}
+
+
+<<include=FALSE>>=
+library(knitr)
+opts_chunk$set(
+  concordance=FALSE, fig.path='scglr-',tidy=FALSE,size="small"
+)
+@
+
 \setkeys{Gin}{width=0.6\textwidth}
 <<echo=FALSE>>=
 options(width=60,prompt = "R> ", continue = "+  ", useFancyQuotes = FALSE)
@@ -59,73 +56,48 @@ options(width=60,prompt = "R> ", continue = "+  ", useFancyQuotes = FALSE)
 \noindent {\it Key words}: Multivariate generalized linear model, partial least squares, Fisher Scoring, \proglang{R}
 
 \section{Introduction}
-The classical generalized linear model (GLM), used for modeling random variables from exponential family distributions, suffer from different limitations: (i) it does not allow modeling of more than one outcome at a time; (ii) for want of regularization, it cannot deal with many correlated regressors - whatever relevant causal factors they may represent - and thus requires some preliminary selection of regressors; (iii) the degree of explanatory realism of the model and the robustness of the prediction may be highly influenced by this selection. We developed the supervised component generalized linear regression (SCGLR) method to overcome these limitations \cite{bry12,bry13}. SCGLR is a multivariate extension of partial least squares (PLS) regression to the generalized linear framework. It allows the relevant information contained in the data to be summarized in a few common components that can predict, as best as possible,  the multivariate outcomes.  The  method was motivated by ecological applications where there is interest in understanding  how  communities of tree species are structured based on environmental traits. Because  species data can be collected through different measurement processes, the outcomes arise from several types of distributions. For example, some species may just be measured through presence/absence and others through count data (e.g., binomial or Poisson distributions). The originality of the SCGLR approach  is to allow the simultaneous modeling of distributions from exponential family;  Bernoulli, binomial, Gaussian and Poisson distributions can currently be handled in the \pkg{SCGLR} package.
-% 
- SCGLR is based on a multivariate GLM and performs a PLS regression on each step of the GLM estimation algorithm. It uses both the responses (e.g., species abundances) and the regressors to calculate common components. Components are constructed sequentially: the first one maximizes some trade-off between its variance and the goodness of fit of the GLM that takes it as sole regressor (cf below for more details), the second one is its  complement in the space orthogonal to the first component, etc, until we get a set of K complementary and mutually independent components, just as in principal component analysis (PCA). Ultimately, these components are used in a GLM as covariates, allowing them to have specific effects on each response. The optimal number of components on which to base the linear predictors is the one that allows the best prediction in cross-validation. The quality of prediction is assessed through various well-known criteria. 
-% 
-In this paper, we introduce an \proglang{R}-package \cite{scglr} that performs SCGLR. We first  briefly review the mathematical basis of the method, then describe the program's features and usage. We illustrate \pkg{SCGLR} on a dataset built from the CoForChange database  (\url{http://www.coforchange.eu}). It gives the abundance of 27 common tree genera in the tropical moistforest of the Congo-Basin and measurements on 40 geo-referenced environmental variables for one thousand 8 by 8 km plots (observations). Each plot's data were obtained by aggregating  data measured on a variable number of previously sampled 0.5 ha sub-plots. Geo-referenced environmental variables were used to describe the physical factors as well as vegetation characteristics.
-% 
-% 
+The classical generalized linear model (GLM), used for modeling random variables from exponential family distributions, suffer from different limitations: (i) it does not allow modeling of more than one outcome at a time; (ii) for want of regularization, it cannot deal with many correlated regressors - whatever relevant causal factors they may represent - and thus requires some preliminary selection of regressors; (iii) the degree of explanatory realism of the model and the robustness of the prediction may be highly influenced by this selection. 
+
+We developed the supervised component generalized linear regression (SCGLR) method to overcome these limitations \cite{bry12,bry13}. SCGLR is a multivariate extension of partial least squares (PLS) regression to the generalized linear framework. It allows the relevant information contained in the data to be summarized in a few common components that can predict, as best as possible,  the multivariate outcomes.  The  method was motivated by ecological applications where there is interest in understanding  how  communities of tree species are structured based on environmental traits. Because  species data can be collected through different measurement processes, the outcomes arise from several types of distributions. For example, some species may just be measured through presence/absence and others through count data (e.g., binomial or Poisson distributions). The originality of the SCGLR approach  is to allow the simultaneous modeling of distributions from exponential family;  Bernoulli, binomial, Gaussian and Poisson distributions can currently be handled in the \pkg{SCGLR} package.
+ 
+SCGLR is based on a multivariate GLM and performs a PLS regression on each step of the GLM estimation algorithm. It uses both the responses (e.g., species abundances) and the regressors to calculate common components. Components are constructed sequentially: the first one maximizes some trade-off between its variance and the goodness of fit of the GLM that takes it as sole regressor (cf below for more details), the second one is its  complement in the space orthogonal to the first component, etc, until we get a set of K complementary and mutually independent components, just as in principal component analysis (PCA). Ultimately, these components are used in a GLM as covariates, allowing them to have specific effects on each response. The optimal number of components on which to base the linear predictors is the one that allows the best prediction in cross-validation. The quality of prediction is assessed through various well-known criteria. 
+ 
+In this paper, we introduce an \proglang{R}-package \cite{scglr} that performs SCGLR. We first  briefly review the mathematical basis of the method, then describe the program's features and usage. We illustrate \pkg{SCGLR} on a dataset built from the CoForChange\footnote{more information on CoForChange is available at \url{http://www.coforchange.eu}} and CoForTips\footnote{and for CoForTips \url{http://www.fordev.ethz.ch/research/active/CoForTips}} databases. It gives the abundance of 27 common tree genera in the tropical moistforest of the Congo-Basin and measurements on 40 geo-referenced environmental variables for one thousand 8 by 8 km plots (observations). Each plot's data were obtained by aggregating  data measured on a variable number of previously sampled 0.5 ha sub-plots. Geo-referenced environmental variables were used to describe the physical factors as well as vegetation characteristics.
+ 
 \section{Description of the SCGLR statistical approach}
-Let $X=\left(X_1,\dots,X_p\right)$ be a matrix whose column-vectors code $p$ regressors (possibly including indicator variables coding for nominal covariates), and $Y=\left(Y_1,\dots,Y_q\right)$ be a matrix whose column-vectors code $q$ responses. Let finally $A$ be a matrix whose column-vectors code additional covariates. SCGLR assumes that the $q$ responses are dependent on an unknown number of mutually orthogonal components (linear combinations of the covariates $X$), along with covariates $A$. The components are assumed common to all the responses in that they play some role in the GLM fit of each response. Moreover, the components are designed to stay rather close to the principal directions of the covariates, that is, stray from the noise contained in the group of regressors. The algorithm is detailed using pseudo-code in Algorithm%~\ref{SCGLRAlg}.
+Let $Y=\left(y^1,\dots,y^q\right)$  be a matrix of $q$ responses we want to model. For this, regressors are classified into two groups. 
+Let $X=\left(x^1,\dots,x^p\right)$ be a matrix whose column-vectors code $p$ regressors (possibly including dummy variables coding nominal covariates). These many regressors contain redundancy and hence there is a specific need for regularisation of the coefficients.
+Let also $T$ be a matrix whose column-vectors code additional covariates, which are  to be included as they are without any regularisation.   SCGLR assumes that the $q$ responses are dependent on an unknown number of mutually orthogonal components (linear combinations of the covariates $X$), along with covariates $T$. The components are assumed common to all the responses in that they play some role in the GLM fit of each response. Moreover, the components are designed to stay rather close to the principal directions of the covariates, that is, stray from the noise contained in the group of regressors.
 
-Let $u$ be a $p$-coefficient vector. Just as in PCA, the structural strength of a component $f = Xu$ is measured through its variance under a unit-norm constraint on $u$. The components are determined sequentially. The first component $f^1 = Xu^1$ optimizes a trade-off between the goodness-of-fit of a multivariate GLM  using $f^1$ as common explanatory variable, and the variance of $f^1$. To be precise, the Fisher scoring algorithm (FSA) used to estimate the GLM of $Y$ on $f^1 = Xu^1$ has been altered replacing, in the estimation step of its current linearized model, the Generalized Least Squares (GLS)  estimation procedure with an extended Partial Least Squares procedure. The latter, taking $f^1$'s variance into account, regularizes coefficient vector $u^1$, which the standard GLS procedure does not. Covariates in $A$ are considered in the regression step, but not taken into account in component $f^1$. Then, $X$ is deflated on $f^1$, that is, projected onto its orthogonal space, yielding residual predictor matrix $X^1$, and the second component $f^2$ is sought in $X^1$ ($f^2 = X^1 u^2$) according to the same trade-off optimization, but taking $f^1$ as extra covariate (i.e., $f^1$ is from there on appended to $A$). And so forth for higher rank components. So, current component $f^r = X^{r-1} u^r$ is based on the matrix of residuals obtained by projecting the original variables $X$ onto the space orthogonal to all previous components $\{f^1 , ... , f^{r-1}\}$, and the estimation procedure of the linearized model within the modified FSA step takes into account covariates $A \cup \{f^1 , ... , f^{r-1}\}$.
+Let $u$ be a $p$-coefficient vector. Just as in PCA, the structural strength of a component $f = Xu$ is measured through its variance under a unit-norm constraint on $u$. The components are determined sequentially. The first component $f^1 = Xu^1$ optimizes a trade-off between the goodness-of-fit of a multivariate GLM  using $f^1$ as common explanatory variable along with $T$, and the variance of $f^1$. To be precise, the Fisher scoring algorithm (FSA) used to estimate the GLM of $Y$ on $<f^1 ,T>$ has been altered in its Generalized Least Squares (GLS) step of the current linearised model  according to two alternative approaches. 
+\paragraph{LPLS approach:} the first one corresponds to a Local Partial Least Squares procedure (LPLS) and maximises the criterion:
+$$\sum_{k=1}^q||z_k||_{W_k}^2 cos^2_{W_k}(z_k;<Xu,T>) ||Xu||_{W_k}^2$$
+where $z_k$ are the working variables in the current linearised model,
+\begin{itemize}
+\item $||z_k||_{W_k}^2 cos^2_{W_k}(z_k;<Xu,T>)$ is a measure of goodness-of-fit,
+\item $||Xu||_{W_k}^2$ is a measure of structural relevance.
+\end{itemize}
+A Singular Value Decomposition algorithm is used to optimize criterion LPLS.
+Taking $f^1$'s variance into account regularises coefficient vector $u^1$, which the standard GLS procedure does not. Covariates in $T$ are considered in the regression step, but not taken into account in component $f^1$. Full details on this method can be found, more formally expressed, in \cite{bry13}.
+\paragraph{SR approach:} the second one takes the Structural Relevance (SR) more explicitely into account and maximises the criterion: 
+$$\psi (u)^{1-s} \phi (u)^s$$
+with $\psi (u)=\sum_{k=1}^q||z_k||_{W_k}^2 cos^2_{W_k}(z_k;<Xu,T>) $ contains the goodness-of-fit measure,
+and two options for function $\phi$:\\
+\begin{itemize}
+  \item Component Variance (CV): $\phi(u)=||Xu||_W^2$
+  \item Variable Powered Inertia (VPI): $\phi (u)=\left(\sum_{j=1}^p<Xu|x^j>_W^{2l}\right)^{\frac{1}{l}}$,
+when $X$  consists of $p$ standardised numeric variables $x^j$. 
+\end{itemize}
+Tuning-parameter $l$ allows to draw components towards more or less local variable bundles. Tuning-parameter $s$ weights the structural relevance in the criterion. This criterion is maximised using an Iterated Normed Gradient algorithm. We recommend the second criterion (SR) for being more flexible. Default is VPI.
 
-Finally, given some integer $R$, a multivariate GLM of the responses is performed on the set $F^R = \{f^1 , ... , f^R\} $ of the first $R$ components,  along with covariates $A$, yielding a coefficient vector for each response $y_k$, with corresponding linear predictor $\eta_k = F^R \gamma_k + A \delta_k $ ($k=1,\dots,q$). Now, each component $f^r$ can be expressed as a linear combination of the original predictors: $f^r = X v^r$. Hence, in matrix form, we have: $F^R = XV^R$. Thus, we can express each linear predictor as a linear combination of the regressors: $\eta_k = X\beta_k + A \delta_k $ with $\beta_k = V^R \gamma_k$. 
+Once $f^1$ is obtained, then $X$ is deflated on $f^1$, that is, projected onto its orthogonal space, yielding residual predictor matrix $X^1$, and the second component $f^2$ is sought in $X^1$ ($f^2 = X^1 u^2$) according to the same trade-off optimization, but including $f^1$ amongst extra-covariates $T$, from there on. And so forth for higher rank components. So, current component $f^r = X^{r-1} u^r$ is based on the matrix of residuals obtained by projecting the original variables $X$ onto the space orthogonal to all previous components $\{f^1 , ... , f^{r-1}\}$, and the estimation procedure of the linearized model within the modified FSA step takes into account covariates $T \cup \{f^1 , ... , f^{r-1}\}$.
+
+Finally, given some integer $R$, a multivariate GLM of the responses is performed on the set $F^R = \{f^1 , ... , f^R\} $ of the first $R$ components,  along with covariates $T$, yielding a coefficient vector for each response $y_k$, with corresponding linear predictor $\eta_k = F^R \gamma_k + T \delta_k $ ($k=1,\dots,q$). Now, each component $f^r$ can be expressed as a linear combination of the original predictors: $f^r = X v^r$. Hence, in matrix form, we have: $F^R = XV^R$. Thus, we can express each linear predictor as a linear combination of the regressors: $\eta_k = X\beta_k + T \delta_k $ with $\beta_k = V^R \gamma_k$. 
 
 The coefficients $\beta_k$ and $ \delta_k$ can be used in cross-validation to determine the optimal number $R$ of components  in order 
 to avoid overfitting. Given the number of components $R$ under trial, the observations are repeatedly partitioned into 2 sub-samples: 
-$C$ (for calibration) and $T$ (for testing). On each partition, $C$ is used to calculate the $R$ components, and hence the $\beta$'s 
-and $\delta$'s, which in turn are used to predict the expectation of the responses on $T$. An appropriate criterion of predictive power 
-is then calculated (depending on the distribution of the responses) and averaged over all $(C,T)$ partitions considered. Eventually, we 
-considered and we select the number yielding  the best performance.
-
-Full details on this method can be found, more formally expressed, in \cite{bry13}.
-
-\begin{algorithm}
-  \caption{SCGLR algorithm - kComponents\label{SCGLRAlg}}
-  \SetAlgoLined
-  
-  \KwIn{$Y$ = array of dependent variables.}
-  \KwIn{$X$ = array of covariates grounding the components.}
-  \KwIn{$A$ = array of additional covariates.}
-  \KwIn{$R$ = number of components to find.}
-  \KwResult{$F$ = array of the $R$ components.}
-  \BlankLine
-  $q \longleftarrow$ number of columns $Y_k$ of $Y$\\
-  \emph{Initialization of the working tables:}\\
-  $X^0 \longleftarrow X$ \\
-  $\tilde{X}^0\longleftarrow X$\\
-  $F^0 \longleftarrow empty \; set$ \\
-\emph{Incrementally find components:}\\
-  \For{$r=1$ \KwTo $R$}{
-    \Begin(\emph{oneComponent}){
-        \For{$k=1$ \KwTo $q$}{
-          Initialization of the working variable $Z_k$ using mean value of variable $Y_k$.\\
-          Initialization of the weighting matrices $W_k$.\\        
-        }
-        \BlankLine      
-        Convergence is defined by the stability of the sought component $f^r$.\\
-      \While{convergence is not reached}{
-        \For{$k=1$ \KwTo $q$}{
-          Calculate the current working table $\tilde{X}^k$ as the $W_k$-orthogonal 
-          projection of $X^{r-1}$ on the orthogonal of  the space spanned by $\{A,F^{r-1}\}$.\\
-          Calculate the PLS1 matrix of $Z_k$ on $\tilde{X}^k$ as $D_k=\tilde{X}^{k'}W_kZ_kZ_k'W_k\tilde{X}^k$.\\
-        }
-        \BlankLine      
-  			Calculate $D$ as the sum over $k$ of the PLS1 matrices $D_k$.\\
-  			Extract the first eigenvector of $D$ and calculate $f^r$ with it. \\
-        \BlankLine
-        \For{$k=1$ \KwTo $q$}{    
-          Update $Z_k$ and $W_k$ using GLS regression on previous components $F^{r-1}$.\\
-        }
-      }
-    }
-    \emph{Add newly found component to previous ones:}\\
-    $F^r \longleftarrow  [F^{r-1},f^r]$\\
-    Calculate $X^r$ as the regression residuals of $X^{r-1}$ on $F^r$.
-  }	
-\end{algorithm}
+$C$ (for calibration) and $S$ (for testing). On each partition, $C$ is used to calculate the $R$ components, and hence the $\beta$'s 
+and $\delta$'s, which in turn are used to predict the expectation of the responses on $S$. An appropriate criterion of predictive power is then calculated (depending on the distribution of the responses) and averaged over all $(C,S)$ partitions considered. Eventually, we consider and  select the value of $R$ yielding  the best performance.
 
 \section{Program description and usage}
 \subsection{Main description}
@@ -133,13 +105,18 @@ Full details on this method can be found, more formally expressed, in \cite{bry1
 \pkg{SCGLR} is developed using \proglang{R} $\geq 3.0$ version \cite{R}. \pkg{SCGLR}  is a set of \proglang{R} functions illustrated on  a floristic data set, \textit{genus}.  \code{scglr()}  and \code{scglrCrossval()} are the two main high level functions, which are respectively dedicated to fitting the model and selecting the number of components. \code{print()}, \code{summary()} and \code{plot()} methods are also available for the \code{scglr()} function.
 % 
 % 
-<<>>=
-library("SCGLR")
+<<echo=FALSE>>=
+suppressPackageStartupMessages(library("SCGLR"))
 @
+
+% <<eval=FALSE>>=
+% library("SCGLR")
+% @
 % 
 The call to \code{scglr()} has the following structure:
 <<eval=FALSE>>=
-results.scglr <- scglr(formula,data,family,K,size,offset,subset,na.action,crit)
+results.scglr <- scglr(formula,data,family,K,size,offset,subset,
+                       na.action,crit,method)
 @
 % 
 The \textit{formula}, \textit{data}, \textit{family} and \textit{K} arguments are required and \textit{size} must be specified if binomial variables are used. 
@@ -147,7 +124,7 @@ The \textit{formula} object of the \textit{Formula} class \cite{Formulapkg}  is 
 
 
 % 
-<<results=hide,echo=FALSE>>=
+<<results='hide',echo=FALSE>>=
 ny <- paste("y",1:2,sep="")
 nx <-paste("x",1:5,sep="")
 nz <- paste("z",1:3,sep="")
@@ -159,7 +136,7 @@ myformula
 The \textit{data} argument is an object of the \textit{data.frame} class. The \textit{family} is a vector of characters describing the family of each  dependent variable. In  \code{SCGLR}, ``bernoulli", ``binomial", ``poisson" or ``gaussian" are allowed. For Poisson outcomes,
 the \textit{offset} argument is either a vector or a matrix of size: number of observations $\times$ number of Poisson dependent variables, allowing  a different offset for each dependent variable. If binomial dependent variables are included in the model,  \textit{size} must be specified as a matrix describing the number of trials.  
 
-
+\vspace{0.3cm}
 The output of the \code{scglr} function  is an object of class \pkg{SCGLR} made of: 
 \begin{itemize}
 \item u: matrix of size: number of regressors $\times$ number of components, contains the component-loadings, i.e., the coefficients of the regressors in the linear combination giving each component.
@@ -180,28 +157,7 @@ The \code{print()} method gives the values of inertia and deviance.  \code{summa
 
 Several specialized plot commands are available to show the results of \code{scglr()}. They are all based on the \pkg{ggplot2} package developed by Wickham, H. \cite{wickham} and as such can be further customized (i.e., one can add more layers or labels for example).
 \begin{itemize} 
-\item \code{plot()}: general function to produce various plots from  the \code{scglr()} output by selecting elements to draw. This selection is specified by the \textit{style} argument as a character vector with parameters chosen in  Table~\ref{TableStyle}: (nb: \textit{style} elements can be abbreviated)
-\begin{table}[!h]
-\centering
-\begin{tabularx}{0.9\textwidth}{cX}
-\hline 
-\textit{Style} elements & descriptions \\ 
-\hline
-covariates & regressors  drawn as black arrows.\\ 
-\hline 
-observations & standardized observations drawn as points. \\ 
-\hline 
-predictors & linear predictors drawn as red arrows. \\ 
-\hline 
-circle & correlation circle. \\ 
-\hline 
-threshold & dashed threshold circle with radius equal to threshold value. Co-variates and linear predictors will be filtered accordingly. Default value of threshold (0.8) can be overridden by using the threshold parameter. \\ 
-\hline 
-factor & centre of observations grouped by factor levels. Factor name must be provided by using factor parameter. \\
-\hline 
-\end{tabularx}
-\caption{Table presenting the \textit{style} parameters available. \label{TableStyle}}
-\end{table}
+\item \code{plot()}: general function to produce various plots from  the \code{scglr()} output by selecting elements to draw. This selection is specified by parameters whose names can be abbreviated (e.g. \textit{pred.col} will be understood as \textit{predictors.color}). Options can be set globally using \code{options("plot.SCGLR")}. It will then provide default values that can be further overriden by giving explicit parameter value.
 
 \item \code{barplot()}: takes an \pkg{SCGLR} object as input and produces a barplot of the inertia per component.
 
@@ -211,14 +167,12 @@ factor & centre of observations grouped by factor levels. Factor name must be pr
 
 
 \subsection{Selecting the number of components}
-Most of the time, the appropriate number of components to best predict dependent variables remains unknown and must be selected. We propose a cross-validation approach using different criteria to determine the number of components. The call to the \code{scglrCrossVal()} function shares the  same arguments as the \code{scglr()} function with two additional arguments \textit{nfolds} and \textit{type}:
+The appropriate number of components to best predict dependent variables remains unknown and must be selected. We propose a cross-validation approach using different criteria to determine the number of components. The call to the \code{scglrCrossVal()} function shares the  same arguments as the \code{scglr()} function with two additional arguments \textit{nfolds} and \textit{type}:
 <<eval=FALSE>>=
 scglrCrossVal(formula,data,family,K,nfolds,types,size,
-                offset,subset,na.action,crit)
+                offset,subset,na.action,crit,method)
 @
-\textit{nfolds} is the number of subsamples to be used in the cross-validation - default is 5. Although \textit{nfolds} can be as large as the sample size (leave-one-out CV), this is not recommended for large datasets. \\
-\textit{type} is the criterion to use for cross-validation. Currently five options are available in a general setting: ``mspe" (Mean Squared Prediction Error), ``likelihood", ``aic", ``bic" and ``aicc". When all dependent variables are Bernoulli, the option ``auc" (area under ROC curve) enables to measure the prediction performance.\\
-The output of the procedure is a ($q \times (K+1)$) matrix containing the criterion values for each response variable and each model. The first column corresponds to the model without any component.
+\textit{nfolds} is the number of subsamples to be used in the cross-validation - default is 5. Although \textit{nfolds} can be as large as the sample size (leave-one-out CV), this is not recommended for large datasets. \textit{type} is the criterion to use for cross-validation. Currently five options are available in a general setting: ``mspe" (Mean Squared Prediction Error), ``likelihood", ``aic", ``bic" and ``aicc". When all dependent variables are Bernoulli, the option ``auc" (area under ROC curve) enables to measure the prediction performance. The output of the procedure is a ($q \times (K+1)$) matrix containing the criterion values for each response variable and each model. The first column corresponds to the model without any component.
 
 
 \section{Examples}
@@ -226,13 +180,10 @@ The output of the procedure is a ($q \times (K+1)$) matrix containing the criter
 \subsection{Floristic data set}
 We illustrate \pkg{SCGLR} using the data \textit{genus}. This example highlights the use of the  multivariate Poisson count distribution with an offset.
 
-\subsection{Count data}
-
-\textit{genus} is a dataset built from the CoForChange database. It gives the abundance of 27 common tree genera in the tropical moistforest of the Congo-Basin and measurments on 40 geo-referenced environmental variables for one thousand 8 by 8 km plots (observations). Data on each plot were obtained by aggregating the data measured on a variable number of previously sampled 0.5 ha sub-plots. The geo-referenced environmental variables were used to describe 16 physical factors pertaining to the description of topography, geology and rainfall and the remaining variables give the vegetation characteristics defined through 16-days enhanced vegetation index (EVI). 
+\textit{genus} is a dataset built from the CoForChange database. It gives the abundance of 27 common tree genera in the tropical moistforest of the Congo-Basin and measurements on 40 geo-referenced environmental variables for one thousand 8 by 8 km plots (observations). Data on each plot were obtained by aggregating the data measured on a variable number of previously sampled 0.5 ha sub-plots. The geo-referenced environmental variables were used to describe 16 physical factors pertaining to the description of topography, geology and rainfall and the remaining variables give the vegetation characteristics defined through 16-days enhanced vegetation index (EVI). 
 
 
 <<>>=
-library("SCGLR")
 data("genus")
 dim(genus)
 @
@@ -251,35 +202,37 @@ formula <- multivariateFormula(ny,c(nx,"I(lon*lat)"),"geology")
 formula
 offset <- genus$surface
 @
-<<eval=TRUE>>=
-K <- 10
-genus.cv <- scglrCrossVal(formula=formula,data=genus,family=family,
-                          K=K,nfolds=5,type="mspe",offset=offset)
-@
-\textit{mc.cores} is an optional argument to launch parallel runs of the cross-validation procedure (default is equal to one).
 
+<<eval=TRUE,cache=TRUE>>=
+K <- 15
+genus.cv <- scglrCrossVal(formula=formula,data=genus,family=family,
+                          K=K,nfolds=5,type="mspe",offset=offset,
+                          method=methodSR(l=1, s=1/2))
+@
 
 Concerning the selection procedure, in order to produce comparable values for possibly very different response variables, we used the following heuristic. For each response and each of the $K+1$ models (one model for each number $K$ of components and one for no component), divide the criterion value by its  median over all the models. Then calculate for each number of components the mean of the standardized values over the different response variables. Alternatively, the mean can be used to normalize  instead of the median.
 <<tempo,eval=TRUE>>=
-criterion <- t(apply(genus.cv,1,function(x) x/median(x)))
-criterion <- apply(criterion,2,mean) 
-K.cv <- which.min(criterion)-1
+criterion <- t(apply(genus.cv,1,function(x) x/mean(x)))
+criterion.mean <- apply(criterion,2,mean) 
+K.cv <- which.min(criterion.mean)-1
 @
-In the expression of \textit{K.cv}, the minus $1$ enables to relable the output such that it matches the actual number of components used. Plotting \textit{criterion} values (see Figure~\ref{plotCv}) displays the change in the selection criterion as the number of components increases. Here, the \textit{criterion} is minimized for $\Sexpr{K.cv}$ components
-<<plotCv,fig=TRUE,include=FALSE,echo=FALSE>>=
-plot(0:K,criterion,t="l",ylab="mspe",xlab="number of components")
+In the expression of \textit{K.cv}, the minus $1$ enables to relabel the output such that it matches the actual number of components used. Plotting \textit{criterion} values (see Figure~\ref{plotCv}) displays the change in the selection criterion as the number of components increases. Here, the \textit{criterion} is minimized for $\Sexpr{K.cv}$ components. We can therefore call \code{scglr()} with $K=\Sexpr{K.cv}$.
+<<plotCv,echo=FALSE,include=FALSE>>=
+plot(0:K,criterion.mean, type="l",
+     xlab="K, number of components", ylab="Criterion (MSPE)")
 Axis(side=1,at=0:K)
+abline(v=K.cv,col=2)
 @
 \begin{figure}[!ht]
 \centering
 \includegraphics{"scglr-plotCv"}
 \caption{Mean Squared Prediction Error (MSPE) as a function of the number of components. \label{plotCv}}
-\end{figure}
-The number of components that minimizes the criterion \Sexpr{K.cv} . We can therefore call \code{scglr()} with $K=\Sexpr{K.cv}$.
+\end{figure} 
 
-<<eval=TRUE>>=
+<<eval=TRUE,cache=TRUE>>=
 genus.scglr<-scglr(formula=formula,data=genus,family=family,
-                   K=K.cv,size=NULL,offset=offset)
+                   K=K.cv,size=NULL,offset=offset,
+                   method=methodSR(l=1,s=1/2))
 @
 % <<echo=FALSE,eval=FALSE>>=
 % save(genus.cv,genus.scglr,file="data/resTempK15MSPE.rdata")
@@ -289,7 +242,7 @@ Printing \textit{genus.scglr}:
 print(genus.scglr)
 @
 Inertia of the \Sexpr{K.cv} components (see Figure~\ref{barplot}): 
-<<barplotScglr,fig=TRUE,include=FALSE>>=
+<<barplotScglr,include=FALSE>>=
 barplot(genus.scglr)
 @
 \begin{figure}[!ht]
@@ -300,12 +253,12 @@ barplot(genus.scglr)
 \end{figure}
 
 The  following two commands create the plots in Figure~\ref{plot}. The first one gives a simple correlation plot (see Figure~\ref{plotSimple}) 
-<<plotSimple,fig=TRUE,include=FALSE>>=
+<<plotSimple,include=FALSE>>=
 plot(genus.scglr)
 @
 The second correlation plot (see Figure~\ref{plotStyle}) displays only the linear predictors and covariates whose norms in the selected plane exceed the threshold specified by the "thr" \textit{styles} element.
-<<plotStyle,fig=TRUE,include=FALSE>>=
-plot(genus.scglr, style=c("simple","predictor","thr"), thr=0.8)
+<<plotStyle,include=FALSE>>=
+plot(genus.scglr, threshold=0.8, predictors=TRUE)
 @
 
 
@@ -323,7 +276,7 @@ plot(genus.scglr, style=c("simple","predictor","thr"), thr=0.8)
 
 
 Finally, we present the \textit{pairs} plot on the planes spanned by components 1,3, and 5  (see Figure~\ref{pairsplot}): 
-<<pairsScglr,fig=TRUE,include=FALSE,eval=TRUE>>=
+<<pairsScglr,include=FALSE,eval=TRUE>>=
 pairs(genus.scglr,components=c(1,3,5),ncol=2,label.size=0.5) 
 @
 \begin{figure}[!ht]
@@ -350,33 +303,4 @@ The main features of the \proglang{R} package \pkg{SCGLR} have been explained an
 This research  was supported by ITG-SEITA  and was part of the CoForChange project (\url{www.coforchange.eu}), funded by the ERA-Net BiodivERsA, with the national funders ANR (France) and NERC (UK), part of the 2008 BiodivERsA call for research proposals, involving 16 European, African and international partners including a number of timber companies (see the list on the website, \url{http://www.coforchange.eu/partners}), and of the CoForTips project, funded by the ERA-Net BiodivERsA, with the national funders FWF (Austria), BelSPO (Belgium) and ANR (France), part of the 2011-2012 BiodivERsA call for research proposals (\url{http://www.fordev.ethz.ch/research/active/CoForTips}).
 \bibliographystyle{plain}
 \bibliography{bibScglr}
-% \begin{thebibliography}{7}
-% 
-% \bibitem{bry12} Bry X, Trottier C, Verron T, Mortier F (2012). Supervised component generalized linear regression using a
-% PLS-extension of the Fisher scoring algorithm. \emph{COMPSTAT 2012 (Cyprus)}, pp. 121--129.
-% \url{http://www.compstat2012.org/Proceedings_COMPSTAT2012.pdf}.
-% 
-% \bibitem{bry13} Bry X, Trottier C, Verron T, Mortier F (2013). Supervised component generalized linear regression using a
-%   PLS-extension of the Fisher scoring algorithm.
-% \emph{Journal of Multivariate Analysis}, \textbf{119}(0), 47 -- 60.
-% \url{http://www.sciencedirect.com/science/article/pii/S0047259X13000407}.
-% 
-% \bibitem{fayolle12} Fayolle A, Engelbrecht B, Freycon V, Mortier F, Swaine M, R\'{e}jou-M\'{e}chain
-%   M, Doucet JL, Fauvet N, Cornu G, Gourlet-Fleury S (2012). Geological substrates shape tree species and trait
-%   distributions in African moist forests. \emph{Plos One}.
-% \url{http://www.plosone.org/article/info%3Adoi/10.1371/journal.pone.0042381}.
-% 
-% \bibitem{scglr} Mortier F, Trottier C, Cornu G, Bry X (2013). \emph{\pkg{SCGLR}: Supervised Component Generalized Linear Regression
-%   (SCGLR)}. \proglang{R} package version 1.1,
-%   \url{http://CRAN.R-project.org/package=SCGLR}.
-% 
-% \bibitem{R} R Core Team (2013).\emph{\proglang{R}: A Language and Environment for Statistical
-%   Computing}. R Foundation for Statistical Computing, Vienna, Austria. \url{http://www.R-project.org}.
-% 
-% \bibitem{wickham} Wickham H (2009). \emph{ggplot2: elegant graphics for data analysis}. Springer-Verlag New York. ISBN 978-0-387-98140-6. \url{http://had.co.nz/ggplot2/book}.
-% 
-% \bibitem{Formulapkg} Zeileis A, Croissant Y (2010). Extended Model Formulas in \proglang{R}: Multiple Parts and
-% Multiple Responses. \emph{Journal of Statistical Software}, \textbf{34}(1), 1--13. \url{http://www.jstatsoft.org/v34/i01/}.
-% 
-% \end{thebibliography}
 \end{document}

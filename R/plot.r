@@ -4,24 +4,11 @@ utils::globalVariables(c("comp","y","label","angle","hjust"))
 #' SCGLR generic plot
 #' @export
 #' @method plot SCGLR
-#' @S3method plot SCGLR
 #' @param x an object from SCGLR class.
-#' @param \dots optional arguments.
-#' @param style describes which plot will be drawn. Style "simple" : correlation plot, "covariates" (to add covariates arrows), "circle" (to add
-#' the unit circle), "observations" (to add observations), "threshold" (to select covariates whose sum of square correlations with the two components 
-#' of the plane exceeds the given threshold), "factor" (to add one the factors),
-#' "predictors" (to add linear predictor arrows). Can be given as a vector or list of strings (eg: c("simple","circle"))
-#' or comma separated string (eg: "simple,circle"). Style elements can also be abbreviated (eg: "simp,cir").
-#' @param threshold a numeric value. All covariates whose sum of square correlations with the two components of the plane lower than this threshold will be ignored.
+#' @param \dots optional arguments (see \link{customize}).
+#' @param style named list of values used to customize the plot (see \link{customize})
 #' @param plane a size-2 vector (or comma separated string) indicating which components are plotted (eg: c(1,2) or "1,2").
-#' @param factor factor to show (default to first one).
-#' @param predictors a vector of character to select the linear predictors displayed.
-#' @param covariates a vector of character to select the covariates displayed.
-#' @param label.offset offset by which labels should be moved from tip of arrows.
-#' @param label.auto whether or not the labels should be rotated according to vector angle.
-#' @param label.size relative size for labels (fine tuning).
-#' @param expand expand factor for windows size, for example to make room for clipped labels.
-#' @return an object of class \code{ggplot}.
+#' @return an object of class \code{\link{ggplot}}.
 #' @examples \dontrun{
 #' library(SCGLR)
 #' 
@@ -53,12 +40,12 @@ utils::globalVariables(c("comp","y","label","angle","hjust"))
 #' 
 #' plot(genus.scglr)
 #' 
-#' plot(genus.scglr,style="circle,cov,predictors,fact")
+#' plot(genus.scglr, predictors=TRUE, factor=TRUE)
 #' 
 #' pairs(genus.scglr)
 #'
 #' } 
-plot.SCGLR <- function(x, ..., style="simple", threshold=0.8, plane=c(1,2), factor=NULL, predictors=NULL, covariates=NULL, label.offset=0.01, label.auto=T,label.size=1, expand=1.0) {
+plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
   data <- x
   if(class(data)!="SCGLR") 
     stop("This plot function need an SCGLR result")
@@ -66,49 +53,65 @@ plot.SCGLR <- function(x, ..., style="simple", threshold=0.8, plane=c(1,2), fact
   if(dim(data$compr)[2]<2)
     stop("At least two axes are needed for this kind of plot!")
   
-  # process style
-  if(is.character(style)) {
-    style <- str_trim(unlist(strsplit(style,",")))
-  }
-
-  style<-match.arg(style,c("simple","covariates","circle","threshold","observations","factor","predictors"),
-                   several.ok=TRUE)
-  
-  # predefined styles
-  if("simple" %in% style)
-    style <- c(style,"covariates","circle")
-  
-  if("threshold" %in% style)
-    style <- c(style,"circle")
-  
-  if(!is.null(factor)) {
-    style <- c(style,"factor")
-  }
-
-  if(!is.null(predictors)) {
-    style <- c(style,"predictors")
-  }
-
-  if(!is.null(covariates)) {
-    style <- c(style,"covariates")
-  }
-  
-  # clean
-  style <- unique(style)
-  
-  # customize
+  # customize from remaining arguments
   dots <- list(...)
+  # merged with style argument
+  if(!is.null(style)) {
+    style[names(dots)] <- dots
+    dots <- style
+  }
+  allowed_cust <- c(
+    "title","expand","labels.offset","labels.auto","labels.size","threshold",
+    "observations",
+    "observations.factor","observations.size","observations.color",
+    "observations.alpha",
+    "predictors",
+    "predictors.color","predictors.arrows","predictors.arrows.color",
+    "predictors.labels","predictors.labels.color","predictors.labels.size",
+    "predictors.labels.auto",
+    "predictors.alpha","predictors.arrows.alpha","predictors.labels.alpha",
+    "covariates",
+    "covariates.color","covariates.arrows","covariates.arrows.color",
+    "covariates.labels","covariates.labels.color","covariates.labels.size",
+    "covariates.labels.auto",
+    "covariates.alpha","covariates.arrows.alpha","covariates.labels.alpha",
+    "factor",
+    "factor.points","factor.points.size","factor.points.shape",
+    "factor.labels","factor.labels.color","factor.labels.size"
+  )
+  match_cust <- function(key) {
+    # build regexp  foo.bar  --> ^foo[^.]*\\.bar[^.]*$
+    key2 <- paste("^",gsub("\\.","[^.]*\\\\.",key),"[^.]*$",sep="")
+    # find matching cust key
+    key2 <- grep(key2,allowed_cust,value=TRUE)
+    # if not found (length==0) or ambiguity (length >1) revert to original
+    if(length(key2)!=1)
+      key2 <- key
+    key2
+  }
+  # resolve abbreviated customization key names
+  names(dots) <- sapply(names(dots),match_cust)
+  # get custom value from key (if not found return default value)
   cust <- function(key, def=NULL) {
-    if(is.null(dots[[key]])) {
+    if(is.null(key)||is.null(dots[[key]])) {
       return(def) 
     } else {
       return(dots[[key]])
     }
   }
+  # check if key has a value or is not false
+  has_cust <- function(key, def=NULL) {
+    key <- cust(key, def)
+    !is.null(key) && (!is.logical(key) || key)
+  }
   
-  # process plan
+  labels.offset <- cust("labels.offset",0.01)
+  labels.auto <- cust("labels.auto",TRUE)
+  labels.size <- cust("labels.size",1)
+    
+  # process plane
   if(is.character(plane)) {
-    plane <- as.integer(str_trim(unlist(strsplit(plane,","))))
+    plane <- as.integer(trim(unlist(strsplit(plane,","))))
   }
   
   # sanity checking
@@ -123,8 +126,9 @@ plot.SCGLR <- function(x, ..., style="simple", threshold=0.8, plane=c(1,2), fact
   axis_names <- colnames(data$compr)[plane]
   
   # check factor
-  if("factor" %in% style) {
-    if(is.null(factor)) {
+  factor <- cust("factor",NULL)
+  if(!is.null(factor)&&(is.character(factor)||factor)) {
+    if(is.logical(factor)) {
       if(is.null(data$xFactors))
         stop("No factor in data!")
       factor <- names(data$xFactors)[1]
@@ -137,9 +141,14 @@ plot.SCGLR <- function(x, ..., style="simple", threshold=0.8, plane=c(1,2), fact
   
   # inertia
   inertia <- data$inertia[plane]
+
+  # layers
+  covariates <- has_cust("covariates",TRUE)
+  predictors <- has_cust("predictors",FALSE)
+  observations <- has_cust("observations",FALSE)
   
   # build base plot
-  p <- qplot((-1:1)*expand, (-1:1)*expand, geom="blank")+
+  p <- qplot((-1:1)*cust("expand",1.0), (-1:1)*cust("expand",1.0), geom="blank")+
     coord_fixed()+
     # thicker x unit arrow
     xlab(paste(axis_names[1],"(",round(100*inertia[1],2),"%)")) + 
@@ -151,147 +160,199 @@ plot.SCGLR <- function(x, ..., style="simple", threshold=0.8, plane=c(1,2), fact
     geom_segment(aes(y=-1.1,yend=1.1,x=0,xend=0),size=1,arrow=arrow(length=unit(0.02,"npc")))
   
   # plot title
-  if("observations" %in% style) {
-    if("circle" %in% style) {
-      p <- p + ggtitle("Mixed individual and \ncorrelation plot\n")
-    } else {
-      p <- p + ggtitle("Individual plot\n")
-    }
+  if(has_cust("title", FALSE)) {
+    p <- p + ggtitle(cust("title"))
   } else {
-    if("circle" %in% style) {
-      p <- p + ggtitle("Correlation plot\n")      
+    if(observations) {
+      if(covariates||predictors) {
+        p <- p + ggtitle("Mixed individual and \ncorrelation plot\n")
+      } else {
+        p <- p + ggtitle("Individual plot\n")
+      }
+    } else {
+      if(covariates||predictors) {
+        p <- p + ggtitle("Correlation plot\n")      
+      } else {
+        p <- p + ggtitle("SCGLR Plot\n")      
+      }
     }
   }
 
   # add unit circle
-  if(("circle" %in% style) || ("threshold" %in% style))
+  if(covariates||predictors)
     p <- p + annotation_custom(circleGrob(r=0.5,gp=gpar(fill=NA)),-1,1,-1,1)
 
   # add threshold circle
-  if("threshold" %in% style)
-    p <- p + annotation_custom(circleGrob(r=0.5*threshold,gp=gpar(fill=NA,lty="dashed")),-1,1,-1,1)
+  if((covariates||predictors)&&has_cust("threshold"))
+    p <- p + annotation_custom(circleGrob(r=0.5*cust("threshold"),gp=gpar(fill=NA,lty="dashed")),-1,1,-1,1)
   
   # add observations
-  if("observations" %in% style) {
+  if(observations) {
     obs <- as.data.frame(data$compr[,plane])
     names(obs) <- c("x","y")
-    if(("factor" %in% style)&&(cust("observations.factor",FALSE))) {
-      obs<-cbind(obs,data$xFactors[factor])
+    
+    # colored according to factor ?
+    if(!is.null(factor)&&(cust("observations.factor",FALSE))) {
+      obs <- cbind(obs,data$xFactors[factor])
       p <- p + geom_point(
         aes_string(x="x",y="y",color=factor),
         data=obs,
-        size=cust("observations.size",1)
+        size=cust("observations.size",1),
+        alpha=cust("observations.alpha",1)
       )
     } else {
       p <- p + geom_point(
         aes(x=x,y=y),
         data=obs,
         size=cust("observations.size",1),
-        color=cust("observations.color","black")
+        color=cust("observations.color","black"),
+        alpha=cust("observations.alpha",1)
       )
     }
   }
   
   # add linear predictor arrows
-  if("predictors" %in% style) {
+  if(predictors) {
+    predictors <- cust("predictors")
     co <- as.data.frame(cor(data$lin.pred, data$compr[,plane]))
-    if(!is.null(predictors)) {
-      co <- co[rownames(co)%in%predictors,]
-    }
     names(co) <- c("x", "y")
     co$norm <- sqrt(co$x^2+co$y^2)
     co$label <- rownames(co)
+    co$color <- cust("predictors.color","red")
+    co$alpha <- cust("predictors.alpha",1)
+    if(cust("predictors.arrows",TRUE)) {
+      co$arrows.color <- cust("predictors.arrows.color",co$color)
+      co$arrows.alpha <- cust("predictors.arrows.alpha",co$alpha)
+    }
+    if(cust("predictors.labels",TRUE)) {
+      co$labels.color <- cust("predictors.labels.color",co$color)
+      co$labels.alpha <- cust("predictors.labels.alpha",co$alpha)
+      co$labels.size <- cust("predictors.labels.size",4*labels.size)
+    }
     
     # adjust label position
     co$angle <- atan2(co$y,co$x)*180/pi
     co$hjust <- ifelse(abs(co$angle)>90,1,0)
-    if(label.auto) {
+    if(cust("predictors.labels.auto",labels.auto)) {
       co$angle <- ifelse(abs(co$angle)>90,co$angle+180,co$angle)
     } else {
       co$angle <- 0
     }
     
+    # filter according to user's will
+    if(is.character(predictors)) {
+      co <- co[co$label %in% predictors,]      
+    }
+    
     # filter according to given threshold
-    if("threshold" %in% style)
-      co <- co[co$norm>threshold,]
+    if(cust("threshold",FALSE)>0)
+      co <- co[co$norm>cust("threshold"),]
     
     if(nrow(co)==0) {
-      warning("No correlation higher than threshold value ",threshold,"!")
-    } else {
-      clr <- cust("predictors.color","red")
+      warning("No predictors with correlation higher than threshold value ",cust("threshold"),"!")
+    } else {      
+      # draw arrows ?
       if(cust("predictors.arrows",TRUE)) {
         p <- p + geom_segment(
           aes(x=0,y=0,xend=x,yend=y),
           data=co,
-          color=cust("predictors.arrows.color",clr),
-          arrow=arrow(length=unit(0.02,"npc")))
+          color=co$arrows.color,
+          alpha=co$arrows.alpha,
+          arrow=arrow(length=unit(0.02,"npc"))
+        )
       } else {
         # reset label position
-        co$hjust<-0.5
-        co$angle<-0
+        co$hjust <- 0.5
+        co$angle <- 0
       }
+      
+      # draw labels ?
       if(cust("predictors.labels",TRUE)) {
         p <- p + geom_text(
-          aes(x=x*(1+label.offset/norm),y=y*(1+label.offset/norm),label=label,angle=angle,hjust=hjust),
+          aes(x=x*(1+labels.offset/norm),y=y*(1+labels.offset/norm),label=label,angle=angle,hjust=hjust),
           data=co,
-          color=cust("predictors.labels.color",clr),
-          size=cust("predictors.labels.size",4*label.size))
+          color=co$labels.color,
+          alpha=co$labels.alpha,
+          size=co$labels.size
+        )
       }
     }    
   }
     
   # add co-variate arrows
-  if("covariates" %in% style) {
+  if(covariates) {
+    covariates <- cust("covariates")
     co <- as.data.frame(cor(data$xNumeric, data$compr[,plane]))
-    if(!is.null(covariates)) {
-      co <- co[rownames(co)%in%covariates,]
-    }
     names(co) <- c("x", "y")
     co$norm <- sqrt(co$x^2+co$y^2)
     co$label <- rownames(co)
-    
+    co$color <- cust("covariates.color","black")
+    co$alpha <- cust("covariates.alpha",1)
+    if(cust("covariates.arrows",TRUE)) {
+      co$arrows.color <- cust("covariates.arrows.color",co$color)
+      co$arrows.alpha <- cust("covariates.arrows.alpha",co$alpha)
+    }
+    if(cust("covariates.labels",TRUE)) {
+      co$labels.color <- cust("covariates.labels.color",co$color)
+      co$labels.alpha <- cust("covariates.labels.alpha",co$alpha)
+      co$labels.size <- cust("covariates.labels.size",4*labels.size)
+    }
+
     # adjust label position
     co$angle <- atan2(co$y,co$x)*180/pi
     co$hjust <- ifelse(abs(co$angle)>90,1,0)
-    if(label.auto) {
+    if(cust("covariates.labels.auto",labels.auto)) {
       co$angle <- ifelse(abs(co$angle)>90,co$angle+180,co$angle)
     } else {
       co$angle <- 0
     }
     
+    # filter according to users's will
+    if(is.character(covariates)) {
+      co <- co[co$label %in% covariates,]
+    }
+
     # filter according to given threshold
-    if("threshold" %in% style)
-      co <- co[co$norm>threshold,]
+    if(cust("threshold",FALSE)>0)
+      co <- co[co$norm>cust("threshold"),]
     
     if(nrow(co)==0) {
-      warning("No correlation higher than threshold value ",threshold,"!")
+      warning("No correlation higher than threshold value ",cust("threshold"),"!")
     } else {
-      clr <- cust("covariates.color","black")
+      # draw arrows ?
       if(cust("covariates.arrows",TRUE)) {
         p <- p + geom_segment(
           aes(x=0,y=0,xend=x,yend=y),
           data=co,
-          color=cust("covariates.arrows.color",clr),
-          arrow=arrow(length=unit(0.02,"npc")))
+          color=co$arrows.color,
+          alpha=co$arrows.alpha,
+          arrow=arrow(length=unit(0.02,"npc"))
+        )
       } else {
         # reset label adjust
-        co$hjust<-0.5
-        co$angle<-0
+        co$hjust <- 0.5
+        co$angle <- 0
       }
+      
+      # draw labels ?
       if(cust("covariates.labels",TRUE)) {
         p <- p + geom_text(
-          aes(x=x*(1+label.offset/norm),y=y*(1+label.offset/norm),label=label,angle=angle,hjust=hjust),
+          aes(x=x*(1+labels.offset/norm),y=y*(1+labels.offset/norm),label=label,angle=angle,hjust=hjust),
           data=co,
-          color=cust("covariates.labels.color",clr),
-          size=4*label.size)
+          color=co$labels.color,
+          size=co$labels.size,
+          alpha=co$labels.alpha
+        )
       }
     }
   }
 
   # add factors
-  if("factor" %in% style) {
+  if(!is.null(factor)) {
     bary <- aggregate(data$compr[,plane],data$xFactors[factor],mean)
     names(bary) <- c(factor,"x","y")
+    
+    # draw points ?
     if(cust("factor.points",TRUE)) {
       p <- p + geom_point(
         aes_string(x="x",y="y",color=factor),
@@ -300,12 +361,14 @@ plot.SCGLR <- function(x, ..., style="simple", threshold=0.8, plane=c(1,2), fact
         shape=cust("factor.points.shape",13)
         )
     }
+    
+    # draw labels ?
     if(cust("factor.labels",TRUE)) {
       p <- p + geom_text(
         aes_string(x="x",y="y",label=factor),
         data=bary,
         color=cust("factor.labels.color","black"),
-        size=cust("factor.labels.size",4*label.size)
+        size=cust("factor.labels.size",4*labels.size)
         )
     }
   }
@@ -317,7 +380,6 @@ plot.SCGLR <- function(x, ..., style="simple", threshold=0.8, plane=c(1,2), fact
 #' @title Barplot of percent of overall X variance captured by component
 #' @export
 #' @method barplot SCGLR
-#' @S3method barplot SCGLR
 #' @param height object of class 'SCGLR', usually a result of running \code{\link{scglr}}.
 #' @param \dots optional arguments.
 #' @return an object of class ggplot.
@@ -332,26 +394,25 @@ barplot.SCGLR <- function(height, ...) {
 #' @title Pairwise scglr plot on components
 #' @export
 #' @method pairs SCGLR
-#' @S3method pairs SCGLR
 #' @param x object of class 'SCGLR', usually a result of running \code{\link{scglr}}.
 #' @param \dots optionally, further arguments forwarded to \code{link{plot.SCGLR}}.
 #' @param nrow number of rows of the grid layout.
 #' @param ncol number of columns of the grid layout.
 #' @param components vector of integers selecting components to plot (default is all components).
-#' @return an object of class ggplot.
+# @return an object of class ggplot.
 #' @seealso For pairs application see examples in \code{\link{plot.SCGLR}} 
 pairs.SCGLR <- function(x, ..., nrow=NULL, ncol=NULL, components=NULL) {
   prm <- list(...)
 
   nr <- nrow
-  nc<-ncol
+  nc <- ncol
 
   prm["x"] <- list(x)
   prm[["components"]] <- NULL
   
   # pairs of components
   if(is.null(components)) {
-    ncomp<-ncol(x$compr)
+    ncomp <- ncol(x$compr)
   } else {
     ncomp <- components
   }
@@ -364,8 +425,7 @@ pairs.SCGLR <- function(x, ..., nrow=NULL, ncol=NULL, components=NULL) {
   
   # build plot list
   one_plot <- function(cmp_pair) {
-    do.call("plot.SCGLR", c(prm, plane=list(cmp_pair))) +
-      ggtitle(NULL)
+    do.call("plot.SCGLR", c(prm, plane=list(cmp_pair),title=paste(cmp_pair,collapse = "/")))
   }
   plots <- lapply(cmp_pairs, one_plot)
   
@@ -373,7 +433,11 @@ pairs.SCGLR <- function(x, ..., nrow=NULL, ncol=NULL, components=NULL) {
   if(is.null(nc) & is.null(nr)) { 
     nr <- as.integer(sqrt(length(plots)))
   }
-  do.call("arrange", c(plots, nrow=nr, ncol=nc))
+#  if(require("gridExtra",quietly = TRUE)) {
+#    do.call("arrangeGrob", c(plots, nrow=nr, ncol=nc,main="toto"))
+#  } else {
+    do.call("arrange", c(plots, nrow=nr, ncol=nc))
+#  }
 }
 
 ## equivalent du par pour les ggplot2
@@ -398,4 +462,5 @@ arrange <- function(..., nrow=NULL, ncol=NULL, as.table=FALSE) {
       ii.p <- ii.p + 1
     }
   }
+  NULL
 }

@@ -12,8 +12,7 @@
 #' @param npar number of parameters used for penalisation.
 #' @return a matrix containing the criterion value for each dependent variable (row) 
 #' and each number of components (column).
-infoCriterion <- function(ynew,pred,family,type,size=NULL,npar=0)
-{
+infoCriterion <- function(ynew,pred,family,type,size=NULL,npar=0) {
   if(type=="auc")
     stop("auc not allowed as loss function!")
   checkLossFunction(type)
@@ -24,30 +23,32 @@ infoCriterion <- function(ynew,pred,family,type,size=NULL,npar=0)
   pen <- switch(type,likelihood=0,aic=npar*2,bic=npar*log(nobs),aicc=2*npar(npar+1)/(nobs-npar-1),mspe=0)
   
   res <- rep(0,ny)
-  if(sum("bernoulli"%in%family)>0){
-    tmpy <- ynew[,which(family%in%"bernoulli"),drop=F]
-    tmpp <- pred[,which(family%in%"bernoulli"),drop=F]
-    if(type=="mspe"){
+ # success <- ynew
+  if(sum("bernoulli" %in% family)>0) {
+    tmpy <- ynew[,which(family %in% "bernoulli"),drop=F]
+    tmpp <- pred[,which(family %in% "bernoulli"),drop=F]
+    if(type=="mspe") {
       ldber <- apply((tmpy-tmpp)^2/(tmpp*(1-tmpp)),2,mean)
     } else {
       ldber <- -2*apply(dbinom(tmpy,1,tmpp,log=T),2,sum)
     }
     res[which(family=="bernoulli")] <- ldber
-  }else{
+    success <- NULL
+  } else {
     ldber=0
   }
-  if(sum("binomial"%in%family)>0){
-    tmpy <- ynew[,which(family%in%"binomial"),drop=F]*size
-    tmpp <- pred[,which(family%in%"binomial"),drop=F]
+  if(sum("binomial" %in% family)>0) {
+    tmpy <- ynew[,which(family %in% "binomial"),drop=F]*size
+    tmpp <- pred[,which(family %in% "binomial"),drop=F]
     
     if(type=="mspe"){
       ldbin <-  apply((tmpy-tmpp)^2/(tmpp*(1-tmpp)*size),2,mean)
     } else {
       ldbin <- -2*apply(dbinom(tmpy,size,tmpp,log=T),2,sum)
     }
-    
+    success <- NULL
     res[which(family=="binomial")] <- ldbin
-  }else{
+  } else {
     ldbin <- 0
   }
   
@@ -59,6 +60,12 @@ infoCriterion <- function(ynew,pred,family,type,size=NULL,npar=0)
     } else {
       ldpois <- -2*apply(dpois(tmpy,tmpp,log=T),2,sum)
     }
+    
+    #lower <- (tmpp-alpha*sqrt(tmpp))
+    #lower[lower<0]<-0
+    #upper <- (tmpp+alpha*sqrt(tmpp))
+    #success <- (tmpy>=lower)&(tmpy<=upper) 
+    
     res[which(family=="poisson")] <- ldpois
   }else{
     ldpois <- 0
@@ -68,13 +75,18 @@ infoCriterion <- function(ynew,pred,family,type,size=NULL,npar=0)
     tmpy <- ynew[,which(family%in%"gaussian"),drop=F]
     tmpp <- pred[,which(family%in%"gaussian"),drop=F]   
     if(type=="mspe"){
-      ldgaus <- apply((tmpy-tmpp)^2/tmpy,2,sum)
+      ldgaus <- apply((tmpy-tmpp)^2/tmpp,2,sum)
     } else {
-      ldgaus <- -2*apply(dnorm(tmpy,pred,tmpp,log=T),2,sum)
+      sd <- matrix(sqrt(apply((tmpy-tmpp)^2,2,mean)),nobs,ny,byrow=T)
+      ldgaus <- -2*apply(dnorm(tmpy,tmpp,tmpp,log=T),2,sum)##à corriger
     }
+    #sd <- matrix(sqrt(apply((tmpy-tmpp)^2,2,mean)),nobs,ny,byrow=T)
+    #success[,which(family%in%"gaussian")] <- (tmpy>=(tmpp-alpha*sqrt(sd)))&(tmpy<=(tmpp+alpha*sqrt(sd))) 
     res[which(family=="gaussian")] <- ldgaus
   }else{
     ldgaus = 0
   }
-  return(res+pen)  
+  #success <- apply(success,2,mean)
+  #return(list(out=res+pen,success=success))  
+ return(res+pen)
 }

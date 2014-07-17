@@ -13,9 +13,11 @@
 # when calculating the component
 # @param crit a list of two elements : maxit and tol, describing respectively the maximum number of iterations and 
 # the tolerance convergence criterion for the Fisher scoring algorithm. Default is set to 50 and 10e-6 respectively. 
+# @param method optimization algorithm used for loadings and components. Object of class "method.SCGLR" 
+# built by \code{\link{methodEigen}} or \code{\link{methodIng}}
 # @return the unit vector of loadings associated with the current component, 
 # i.e. the coefficients of the regressors in the linear combination giving each component
-oneComponent <- function(X,Y,AX,family,size=NULL,offset=NULL,ds,crit)
+oneComponent <- function(X,Y,AX,family,size=NULL,offset=NULL,ds,crit,method)
 {
   ##cst control and iteration
   muinf <- 1e-5
@@ -147,73 +149,66 @@ oneComponent <- function(X,Y,AX,family,size=NULL,offset=NULL,ds,crit)
   
   while((tol1>tol)&&(iter<maxit))
   {
-    # centrage des Zj par rapport a Wj
-    # centrage de X par rapport a Wbar
-    # calcul de A : matrice de la forme quadratique du critere a miximiser
-    A<-matrix(0,p,p)
-    # calcul de A
-    if (is.null(AX))
-    {
-      for (j in 1:q)
-      {
-        Xjc <- apply(X,2, wtCenter,w=W[,j]) # seulement centre ! 
-        Zjcr <- wtScale(Z[,j],W[,j]) # centre-reduit !
-        WZj <- W[,j]*Zjcr
-        if(p>n){
-          SA <- tcrossprod(WZj,WZj)
-          A <- A+crossprod(Xjc,SA)%*%Xjc
-        }else{
-          SA <- crossprod(WZj,Xjc)
-          A <- A+ crossprod(SA)
+    if(method$method=="lpls") {
+      ##################################### LPLS METHOD #############
+      # centrage des Zj par rapport a Wj
+      # centrage de X par rapport a Wbar
+      # calcul de A : matrice de la forme quadratique du critere a miximiser
+      A<-matrix(0,p,p)
+      # calcul de A
+      if (is.null(AX)){
+        for (j in 1:q){
+          Xjc <- apply(X,2, wtCenter,w=W[,j]) # seulement centre ! 
+          Zjcr <- wtScale(Z[,j],W[,j]) # centre-reduit !
+          WZj <- W[,j]*Zjcr
+          if(p>n){
+            SA <- tcrossprod(WZj,WZj)
+            A <- A+crossprod(Xjc,SA)%*%Xjc
+          }else{
+            SA <- crossprod(WZj,Xjc)
+            A <- A+ crossprod(SA)
+          }
         }
       }
-    }
-    else
-    {
-      for (j in 1:q)
-      {
-        Xjc <- apply(X,2,wtCenter,w=W[,j]) ## BOTTLENECK
-        Xjc <- Xjc-AX%*%solve(crossprod(AX,W[,j]*AX),crossprod(AX,W[,j]*Xjc))
-        Zjcr <- wtScale(Z[,j],W[,j])
-        WZj <- W[,j]*Zjcr    
-        if(p>n){
-          SA <- tcrossprod(WZj,WZj)
-          A <- A+crossprod(Xjc,SA)%*%Xjc
-        }else{
-          SA <- crossprod(WZj,Xjc)
-          A <- A+ crossprod(SA)
-        }        
+      else{
+        for (j in 1:q){
+          Xjc <- apply(X,2,wtCenter,w=W[,j]) ## BOTTLENECK
+          Xjc <- Xjc-AX%*%solve(crossprod(AX,W[,j]*AX),crossprod(AX,W[,j]*Xjc))
+          Zjcr <- wtScale(Z[,j],W[,j])
+          WZj <- W[,j]*Zjcr    
+          if(p>n){
+            SA <- tcrossprod(WZj,WZj)
+            A <- A+crossprod(Xjc,SA)%*%Xjc
+          }else{
+            SA <- crossprod(WZj,Xjc)
+            A <- A+ crossprod(SA)
+          }        
+        }
+        
       }
       
+      if(ds>0){
+        A <- puis.stX%*%A
+      }
+      unew <- eigen(A,symmetric=TRUE)$vectors[,1]
+      if (c(crossprod(unew,u)) < 0) {
+        unew <- -unew
+      } 
+    } else {
+      ############################ SR METHOD ########################      
+      unew <- ing(Z=Z,X=X,AX=AX,W=W,u=u,method=method) 
     }
-    
-    if(ds>0)
-    {
-      A <- puis.stX%*%A
-    }
-    unew <- eigen(A,symmetric=TRUE)$vectors[,1]
-    #if (is.logical(unew)) {return(FALSE)}
-    if (c(crossprod(unew,u)) < 0)
-    {
-      unew <- -unew
-    } 
-    
     f<-X%*%unew
-    if (is.null(AX))
-    {
+    if (is.null(AX)) {
       reg <- cbind(1,f)      
-      for(j in 1:q)
-      {	
+      for(j in 1:q) {	
         sol <-solve(crossprod(reg,W[,j]*reg),crossprod(reg,W[,j]*Z[,j]))
         eta[,j] <- sol[1] + f%*%sol[2] 
       }		
-    }
-    else
-    {	
+    } else {	
       r<-dim(AX)[2]
       reg<-cbind(rep(1,n),AX,f)
-      for (j in 1:q)
-      {       
+      for (j in 1:q) {       
         sol <-solve(crossprod(reg,W[,j]*reg),crossprod(reg,W[,j]*Z[,j]))
         eta[,j] <- sol[1] + AX%*%sol[2:(r+1)] + f%*%sol[r+2] 
       }
@@ -223,8 +218,7 @@ oneComponent <- function(X,Y,AX,family,size=NULL,offset=NULL,ds,crit)
     # Update  of Z and W 
     #browser()
     #Z <- eta
-    if("bernoulli"%in%family)
-    {
+    if("bernoulli" %in% family) {
       etainf <- log(muinf/(1-muinf))
       indinf<-1*(eta[,family=="bernoulli"]<etainf)
       eta[,family=="bernoulli"]<-eta[,family=="bernoulli"]*(1-indinf)+etainf*indinf
@@ -234,8 +228,7 @@ oneComponent <- function(X,Y,AX,family,size=NULL,offset=NULL,ds,crit)
       Z[,family=="bernoulli"] <-  eta[,family=="bernoulli"] + (Y[,family=="bernoulli"]-mu)/(mu*(1-mu))
       W[,family=="bernoulli"] <- mu*(1-mu)
     }
-    if("binomial"%in%family)
-    {
+    if("binomial" %in% family) {
       etainf <- log(muinf/(1-muinf))
       indinf<-1*(eta[,family=="binomial"]<etainf)
       eta[,family=="binomial"]<-eta[,family=="binomial"]*(1-indinf)+etainf*indinf
@@ -245,23 +238,22 @@ oneComponent <- function(X,Y,AX,family,size=NULL,offset=NULL,ds,crit)
       Z[,family=="binomial"] <-  eta[,family=="binomial"] + (Y[,family=="binomial"]-mu)/(mu*(1-mu))
       W[,family=="binomial"] <- mu*(1-mu)*size
     }
-    if("poisson"%in%family)
-    {
+    if("poisson" %in% family) {
       etainf <- log(muinf)
       indinf<-1*(eta[,family=="poisson"]<etainf)
       eta[,family=="poisson"]<-eta[,family=="poisson"]*(1-indinf)+etainf*indinf
-      if(is.null(offset))
-      {
+      if(is.null(offset)) {
         mu <- exp(eta[,family=="poisson"])
-      }else{
+      } else {
         mu <- exp(eta[,family=="poisson"]+loffset)   
       }
       Z[,family=="poisson"]<- eta[,family=="poisson"]+(Y[,family=="poisson"]-mu)/mu
       W[,family=="poisson"] <- mu
     }
-    if("gaussian"%in%family){
+    if("gaussian"%in%family) {
       Z[,family=="gaussian"]<-Y[,family=="gaussian"]
     }
+    
     W <- apply(W,2,function(x) x/sum(x))   
     
     f<-c(X%*%u)
@@ -284,7 +276,7 @@ oneComponent <- function(X,Y,AX,family,size=NULL,offset=NULL,ds,crit)
     if(FALSE)  message("  Warning !!! max number of iterations in oneComponent tol=", tol1)
     return(FALSE)
   }
-  if(tol1 <= tol){
+  if(tol1 <= tol) {
     # TODO verbose option
     if(FALSE) message("  Convergence in ",iter," iterations with ds=", ds, " and tol=", tol)    
   }

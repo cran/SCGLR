@@ -11,6 +11,7 @@
 multivariateGlm.fit <- function(Y,comp,family,offset,size){
   q <- ncol(Y)
   out <- list()
+  
   if(!is.null(comp)){
     if (is.matrix(comp)|| is.data.frame(comp))
     {
@@ -33,22 +34,30 @@ multivariateGlm.fit <- function(Y,comp,family,offset,size){
     if(family[i]=="poisson"){
       if(is.null(offset)){
         out[[i]] <- glm(form,data=data.frame(obs=Y[,i],comp),family="poisson")
+        #out[[i]] <- glm.fit(comp,c(Y[,i]),family=poisson())
       }else{
+        #browser()
         out[[i]] <- glm(form,data=data.frame(obs=Y[,i],comp),family=family[i],
                         offset=log(offset[,kpois]))
+        #out[[i]] <- glm.fit(as.matrix(comp),c(Y[,i]),family=poisson(),
+        #                offset=log(offset[,kpois]))
         kpois <- kpois+1
       }
     }
     if(family[i]=="bernoulli"){
-      out[[i]] <- glm(form,data=data.frame(obs=Y[,i],comp),family="binomial")  
+      out[[i]] <- glm(form,data=data.frame(obs=Y[,i],comp),family="binomial")
+      #out[[i]] <- glm.fit(comp,c(Y[,i]),family=binomial())  
     }
     if(family[i]=="binomial"){
       out[[i]] <- glm(form,data=data.frame(obs=Y[,i],comp),family="binomial",
                       weights=size[,kbern])
+      #out[[i]] <- glm(comp,c(Y[,i]),family=binomial(),
+      #            weights=size[,kbern])
       kbern <- kbern+1
     }
     if(family[i]=="gaussian"){
       out[[i]] <- glm(form,data=data.frame(obs=Y[,i],comp),family="gaussian")
+      #out[[i]] <- glm.fit(comp,c(Y[,i]),family=gaussian())
     }  
   }
   

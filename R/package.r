@@ -16,6 +16,12 @@
 #' @import Formula
 #' @import expm
 #' @importFrom graphics barplot
-#' @import ggplot2 grid stringr
+#' @import ggplot2 grid
 #' @import ROCR
 NULL
+
+.onLoad <- function(libname,pkgname) {
+}
+
+.onAttach <- function(libname,pkgname) {
+}

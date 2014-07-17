@@ -13,15 +13,16 @@
 # for binomial dependent variables. 
 # @param offset used for the poisson dependent variables.
 # A vector or a matrix of size: number of observations * number of Poisson dependent variables is expected
-# @param crit crit a list of two elements : maxit and tol, describing respectively the maximum number of iterations and 
-# the tolerance convergence criterion for the Fisher scoring algorithm. Default is set to 50 and 10e-6 respectively. 
+# @param crit a list of maxit and tol, default is 50 and 10e-6. If responses are bernoulli variables only, tol should generally be increased
+# @param method optimization algorithm used for loadings and components. Object of class "method.SCGLR" 
+# built by \code{\link{methodEigen}} or \code{\link{methodIng}}
 # @return a list 
 # @return \item{u}{matrix of size (number of regressors * number of components), contains the component-loadings, 
 # i.e. the coefficients of the regressors in the linear combination giving each component}
 # @return \item{comp}{matrix of size (number of statistical units * number of components) having the components as column vectors}
 # @return \item{compr}{matrix of size (number of statistical units * number of components) having the standardized components as column vectors}
 # @return \item{ds}{the final value of the regularization degree}
-kComponents <- function(X,Y,AX,K,family,size=NULL,offset=NULL,crit=list())
+kComponents <- function(X,Y,AX,K,family,size=NULL,offset=NULL,crit,method)
 {
   n<-dim(X)[1]
   p<-dim(X)[2]
@@ -33,12 +34,15 @@ kComponents <- function(X,Y,AX,K,family,size=NULL,offset=NULL,crit=list())
   # TODO verbose option
   if(FALSE) print("first component")
   out <- oneComponent(X,Y,AX,family=family,size=size,
-                      offset=offset,ds=ds[1],crit=crit)
+                      offset=offset,ds=ds[1],crit=crit,method=method)
+  
+  if(method$method=="lpls") {
   while (is.logical(out))
   {
     ds[1] <- ds[1]+1
     out <- oneComponent(X,Y,AX,family=family,size=size,
-                        offset=offset,ds=ds[1],crit=crit)
+                          offset=offset,ds=ds[1],crit=crit,method=method)
+    }	
   }	
   u <- out
   f <- X%*%u
@@ -57,7 +61,8 @@ kComponents <- function(X,Y,AX,K,family,size=NULL,offset=NULL,crit=list())
       if(FALSE) message("\nComponent ",k)
       Tab <- cbind(comp,AX)
       out <- oneComponent(Xcour,Y,Tab,family=family,size=size,
-                          offset=offset,ds=ds[k],crit=crit)
+                          offset=offset,ds=ds[k],crit=crit,method=method)
+      if(method$method=="lpls") {
       while (is.logical(out))
       {
         ds[k] <- ds[k]+1
@@ -66,7 +71,11 @@ kComponents <- function(X,Y,AX,K,family,size=NULL,offset=NULL,crit=list())
           crit$tol <- min(crit$tol*10,1)
         }
         out <- oneComponent(Xcour,Y,Tab,family=family,size=size,
-                            offset=offset,ds=ds[k],crit=crit)
+                              offset=offset,ds=ds[k],crit=crit,method=method)
+        }
+      }
+      if(is.logical(out)) {
+        stop("Pas de convergence !!!!!")
       }
       f <- Xcour%*%out
       compr <- cbind(compr,f/sqrt(c(crossprod(f,f))/n))
@@ -77,8 +86,8 @@ kComponents <- function(X,Y,AX,K,family,size=NULL,offset=NULL,crit=list())
   }	
   u <- as.matrix(u)
   colnames(u) <- paste("u",1:ncol(u),sep="")
-  colnames(comp) <- paste("c",1:ncol(comp),sep="")
-  colnames(compr) <- paste("cr",1:ncol(compr),sep="")
+  colnames(comp) <- paste("sc",1:ncol(comp),sep="")
+  colnames(compr) <- paste("sc",1:ncol(compr),sep="")
 
   return(list(u=u,comp=comp,compr=compr,ds=ds))
 }

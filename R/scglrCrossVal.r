@@ -21,6 +21,8 @@
 #' @param crit a list of two elements : maxit and tol, describing respectively the maximum number of iterations and 
 #' the tolerance convergence criterion for the Fisher scoring algorithm. Default is set to 50 and 10e-6 respectively. 
 #' @param mc.cores max number of cores to use when using parallelization (Not available in windows yet and strongly discouraged if in interactive mode).
+#' @param method Regularization criterion type. Object of class "method.SCGLR" 
+#' built by \code{\link{methodLPLS}} for PLS-type approach or \code{\link{methodSR}} for Structural Relevance.
 #' @return  a matrix containing the criterion values for each response (rows) and each number of components (columns).
 #' @references Bry X., Trottier C., Verron T. and Mortier F. (2013) Supervised Component Generalized Linear Regression using a PLS-extension of the Fisher scoring algorithm. \emph{Journal of Multivariate Analysis}, 119, 47-60.
 #' @examples \dontrun{
@@ -56,8 +58,8 @@
 #' 
 #' #plot(mean.crit, type="l")
 #' }
-scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NULL,offset=NULL,subset=NULL,na.action=na.omit,crit=list(), mc.cores=1)
-{
+scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NULL,offset=NULL,subset=NULL,
+                           na.action=na.omit,crit=list(), method=methodSR(),mc.cores=1) {
   if( (mc.cores>1) && ((.Platform$OS.type == "windows") || (!require(parallel, quietly=T)))){
     warning("Sorry parallel package is not available!")
     mc.cores <- 1
@@ -98,7 +100,13 @@ scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NUL
   x <- model.part(form, data=mf, rhs = 1)
   if(sum(length(form))==3){
     AX <- model.part(form, data=mf, rhs = 2)
-    AX <- as.matrix(model.matrix(form,data=mf,rhs=2)[,-1])
+    namesAx <- names(AX)
+    AX <- model.matrix(form,data=mf,rhs=2)[,-1]
+    #browser()
+    if(is.vector(AX)) {
+      AX <- matrix(AX,ncol=1)
+      colnames(AX) <- namesAx
+    }
   }else{
     AX <- NULL
   }
@@ -156,7 +164,7 @@ scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NUL
     
     kComponent.fit <- kComponents(X=xcr[estid,,drop=F],Y=y[estid,,drop=F],AX=AX[estid,,drop=F],K=K,
                                   family=family,size=size[estid,,drop=F],
-                                  offset=offset[estid,,drop=F],crit=crit)  
+                                  offset=offset[estid,,drop=F],crit=crit,method=method)  
     for(kk in seq(K)){ 
       if(is.null(AX)){
         gamma.fit <- multivariateGlm.fit(Y=y[estid,,drop=F],comp=kComponent.fit$comp[,1:kk,drop=F],
@@ -227,7 +235,11 @@ scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NUL
   
   cvNull <- sapply(result,function(x) x$cvNull,simplify=F)
   cvNull <- simplify2array(cvNull)
-  cvNull <- apply(cvNull,1,mean)
+  if(is.vector(cvNull)) {
+    cvNull <- mean(cvNull)
+  } else {
+    cvNull <- apply(cvNull,1,mean)
+  }
   cv <- cbind(cvNull,cv)
   colnames(cv) <- c("null model",paste("nc",1:K,sep=""))  
   rownames(cv) <- colnames(y)
