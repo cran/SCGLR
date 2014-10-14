@@ -1,3 +1,7 @@
+* version 2.0.1
+- performance improvement
+- fix compatibility of vignette source with knitr 1.7
+
 * version 2.0
 - New method is available : SR (Structural Relevance) see vignette
 - Major rewrite of plot styling (not backward compatible)

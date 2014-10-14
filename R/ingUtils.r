@@ -77,9 +77,8 @@ hFunct<- function(z,X,AX,W,u,method)
       PiorthoPrimeWkz <- Wzk -  W[,k]*AX%*%solve(AXtWkAX,crossprod(AX,Wzk))
       ##verif Wz[,k] - diag(W[,k])%*%AX%*%solve(t(AX)%*%diag(W[,k])%*%AX)%*%t(AX)%*%diag(W[,k])%*%z[,k]
       XprimeprojorthoWz <- crossprod(X,PiorthoPrimeWkz) #X' Pi_{T^{ortho}}'W_k z_k
-      XprimeprojorthoWz <- tcrossprod(XprimeprojorthoWz,XprimeprojorthoWz)#X'Pi_{T^{ortho}}'W_k z_k z_k W_k Pi_{T^{ortho}}X
-      #term1 <- c(XprimeprojorthoWz%*%u)/(scalsqpfpf*scalsqzz[k])
-      term1 <- c(XprimeprojorthoWz%*%u)/(scalsqpfpf)
+      term1 <- c(XprimeprojorthoWz%*%crossprod(XprimeprojorthoWz,u))/(scalsqpfpf)
+      
       WprojWkOrthof <- W[,k]*projWkforthoAX#W_k Pi_{T^{ortho}}Xu
       ##verif diag(W[,k])%*%projWkforthoAX
       PiorthoPrimeWkf <- WprojWkOrthof-W[,k]*AX%*%solve(AXtWkAX,crossprod(AX,WprojWkOrthof))#Pi_{T^{ortho}}^primeW_k\pi_{T^{ortho}}Xu
@@ -99,9 +98,9 @@ hFunct<- function(z,X,AX,W,u,method)
       psi <- psi+sum(scalsqpfz/(scalsqpfpf))      
       #calcul de grad de psi     
       XprimeWz <- crossprod(X,Wzk) #X'W_k z_k
-      XprimeWz <- tcrossprod(XprimeWz,XprimeWz)#X'W_k z_k z_k' W_k X
-      #term1 <- c(XprimeprojorthoWz%*%u)/(scalsqpfpf*scalsqzz[k])
-      term1 <- c(XprimeWz%*%u)/(scalsqpfpf)
+      term1 <- c(XprimeWz%*%crossprod(XprimeWz,u))/(scalsqpfpf)
+      
+      
       term2 <-  scalsqpfz*c(crossprod(X,W[,k]*f))/(scalsqpfpf^2)  
       gradpsi <- gradpsi +(term1-term2)
     }

@@ -27,12 +27,18 @@ methodLPLS <- function() {
 #'@param bailout integer argument 
 methodSR <- function(phi="vpi",l=1,s=1/2,maxiter=1000,epsilon=1e-6,bailout=10) {
   # check arguments
-  if(!phi %in% c("vpi","cv")) stop("phi should be \"vpi\" or \"cv\"")
-  if(!is.numeric(l) || l<1) stop("l must be greater than 1")
-  if(!is.numeric(s) || s<0 || s>1) stop("s must be between 0 and 1")
-  if(!is.numeric(maxiter) || maxiter<1) stop("maxiter must be an integer greater than 1")
-  if(!is.numeric(epsilon) || epsilon<=0) stop("epsilon must be a positive numeric")
-  if(!is.numeric(bailout) || bailout<1) stop("bailout must be an integer greater than 1")
+  if(!(phi %in% c("vpi","cv"))) 
+    stop("phi should be \"vpi\" or \"cv\"")
+  if(!is.numeric(l) || l<1) 
+    stop("l must be greater than 1")
+  if(!is.numeric(s) || s<0 || s>1) 
+    stop("s must be between 0 and 1")
+  if(!is.numeric(maxiter) || maxiter<1) 
+    stop("maxiter must be an integer greater than 1")
+  if(!is.numeric(epsilon) || epsilon<=0) 
+    stop("epsilon must be a positive numeric")
+  if(!is.numeric(bailout) || bailout<1) 
+    stop("bailout must be an integer greater than 1")
   
   structure(list(
     method="sr",

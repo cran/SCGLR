@@ -216,18 +216,13 @@ criterion <- t(apply(genus.cv,1,function(x) x/mean(x)))
 criterion.mean <- apply(criterion,2,mean) 
 K.cv <- which.min(criterion.mean)-1
 @
-In the expression of \textit{K.cv}, the minus $1$ enables to relabel the output such that it matches the actual number of components used. Plotting \textit{criterion} values (see Figure~\ref{plotCv}) displays the change in the selection criterion as the number of components increases. Here, the \textit{criterion} is minimized for $\Sexpr{K.cv}$ components. We can therefore call \code{scglr()} with $K=\Sexpr{K.cv}$.
-<<plotCv,echo=FALSE,include=FALSE>>=
+In the expression of \textit{K.cv}, the minus $1$ enables to relabel the output such that it matches the actual number of components used. Plotting \textit{criterion} values (see Figure~\ref{fig:plotCv}) displays the change in the selection criterion as the number of components increases. Here, the \textit{criterion} is minimized for $\Sexpr{K.cv}$ components. We can therefore call \code{scglr()} with $K=\Sexpr{K.cv}$.
+<<plotCv, fig.align='center', fig.pos='!ht', fig.cap='Mean Squared Prediction Error (MSPE) as a function of the number of components.'>>=
 plot(0:K,criterion.mean, type="l",
      xlab="K, number of components", ylab="Criterion (MSPE)")
 Axis(side=1,at=0:K)
 abline(v=K.cv,col=2)
 @
-\begin{figure}[!ht]
-\centering
-\includegraphics{"scglr-plotCv"}
-\caption{Mean Squared Prediction Error (MSPE) as a function of the number of components. \label{plotCv}}
-\end{figure} 
 
 <<eval=TRUE,cache=TRUE>>=
 genus.scglr<-scglr(formula=formula,data=genus,family=family,
@@ -241,50 +236,25 @@ Printing \textit{genus.scglr}:
 <<eval=TRUE>>=
 print(genus.scglr)
 @
-Inertia of the \Sexpr{K.cv} components (see Figure~\ref{barplot}): 
-<<barplotScglr,include=FALSE>>=
+Inertia of the \Sexpr{K.cv} components (see Figure~\ref{fig:barplotScglr}): 
+
+<<barplotScglr, fig.align='center', fig.pos='!ht', fig.cap='Barplot of inertia per component'>>=
 barplot(genus.scglr)
 @
-\begin{figure}[!ht]
-\begin{center}
-\includegraphics{"scglr-barplotScglr"}
-\end{center}
-\caption{Barplot of inertia per component \label{barplot}}
-\end{figure}
 
-The  following two commands create the plots in Figure~\ref{plot}. The first one gives a simple correlation plot (see Figure~\ref{plotSimple}) 
-<<plotSimple,include=FALSE>>=
+The  following two commands create the plots in Figure~\ref{fig:samplePlots}. The first one gives a simple correlation plot (see Figure~\ref{fig:samplePlots1}) 
+
+The second correlation plot (see Figure~\ref{fig:samplePlots2}) displays only the linear predictors and covariates whose norms in the selected plane exceed the threshold specified by the "thr" \textit{styles} element.
+
+<<samplePlots, fig.align='center',fig.pos='!ht',fig.cap='Two sample plots',fig.subcap=c('Simple correlation plot','Correlation plot with linear predictors and covariates passing a threshold of $0.8$'),fig.show='hold',out.width='0.49\\linewidth'>>=
 plot(genus.scglr)
-@
-The second correlation plot (see Figure~\ref{plotStyle}) displays only the linear predictors and covariates whose norms in the selected plane exceed the threshold specified by the "thr" \textit{styles} element.
-<<plotStyle,include=FALSE>>=
 plot(genus.scglr, threshold=0.8, predictors=TRUE)
 @
 
-
-\begin{figure}[!ht]
-\subfloat[Simple correlation plot\label{plotSimple}]{%
-\includegraphics[width=0.45\textwidth]{"scglr-plotSimple"}
-}
-\hfill
-\subfloat[Correlation plot with linear predictors and covariates passing a threshold of $0.8$.\label{plotStyle}]{%
-\includegraphics[width=0.45\textwidth]{"scglr-plotStyle"}
-}
-\caption{Two sample plots}
-\label{plot}
-\end{figure}
-
-
-Finally, we present the \textit{pairs} plot on the planes spanned by components 1,3, and 5  (see Figure~\ref{pairsplot}): 
-<<pairsScglr,include=FALSE,eval=TRUE>>=
+Finally, we present the \textit{pairs} plot on the planes spanned by components 1,3, and 5  (see Figure~\ref{fig:pairsScglr}): 
+<<pairsScglr,fig.align='center', fig.pos='!ht', fig.cap='Correlation plots on planes spanned by components 1, 3, and 5'>>=
 pairs(genus.scglr,components=c(1,3,5),ncol=2,label.size=0.5) 
 @
-\begin{figure}[!ht]
-\begin{center}
-\includegraphics[width=0.8\textwidth]{"scglr-pairsScglr"}
-\end{center}
-\caption{Correlation plots on planes spanned by components 1, 3, and 5 \label{pairsplot}}
-\end{figure}
 
 \section{Conclusion}
 The main features of the \proglang{R} package \pkg{SCGLR} have been explained and illustrated in this paper using the data set \textit{genus}  provided with the package. Contrary to  existing  PLS-dedicated packages that can only handle Gaussian data, \pkg{SCGLR} provides  a unified framework to deal with  multivariate outcomes arising from any exponential family distribution. The computational time required to run \code{scglr} depends on the dimension of the problem. Table~\ref{times} provides the mean user times required to run 100 simulations of the \textit{scglr()} algorithm using one component with $p=100$ covariates and a varying number of dependent variables ($q=10$ and $100$) and varying sample sizes ($n=100,1000$ and $10,000$).   These results highlight the  efficiency of the \pkg{SCGLR} package.

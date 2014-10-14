@@ -60,8 +60,8 @@
 #' }
 scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NULL,offset=NULL,subset=NULL,
                            na.action=na.omit,crit=list(), method=methodSR(),mc.cores=1) {
-  if( (mc.cores>1) && ((.Platform$OS.type == "windows") || (!require(parallel, quietly=T)))){
-    warning("Sorry parallel package is not available!")
+  if( (mc.cores>1) && ((.Platform$OS.type == "windows") || (!requireNamespace("parallel", quietly=T)))){
+    warning("Sorry as parallel package is not available, I will use only one core!")
     mc.cores <- 1
   }
   if((mc.cores>1) && interactive()) {
@@ -162,51 +162,51 @@ scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NUL
     cv <- array(0,c(ny,K))
     cvNull <- matrix(0,ny)
     
-    kComponent.fit <- kComponents(X=xcr[estid,,drop=F],Y=y[estid,,drop=F],AX=AX[estid,,drop=F],K=K,
-                                  family=family,size=size[estid,,drop=F],
+    kComponent.fit <- kComponents(X=xcr[estid,,drop=FALSE],Y=y[estid,,drop=FALSE],AX=AX[estid,,drop=FALSE],K=K,
+                                  family=family,size=size[estid,,drop=FALSE],
                                   offset=offset[estid,,drop=F],crit=crit,method=method)  
     for(kk in seq(K)){ 
       if(is.null(AX)){
-        gamma.fit <- multivariateGlm.fit(Y=y[estid,,drop=F],comp=kComponent.fit$comp[,1:kk,drop=F],
-                                         family=family,offset=offset[estid,,drop=F],size=size[estid,,drop=F])
+        gamma.fit <- multivariateGlm.fit(Y=y[estid,,drop=FALSE],comp=kComponent.fit$comp[,1:kk,drop=FALSE],
+                                         family=family,offset=offset[estid,,drop=FALSE],size=size[estid,,drop=FALSE])
       }else{
-        gamma.fit <- multivariateGlm.fit(Y=y[estid,,drop=F],comp=cbind(kComponent.fit$comp[,1:kk,drop=F],AX[estid,,drop=F]),
-                                         family=family,offset=offset[estid,,drop=F],size=size[estid,,drop=F])  
+        gamma.fit <- multivariateGlm.fit(Y=y[estid,,drop=FALSE],comp=cbind(kComponent.fit$comp[,1:kk,drop=FALSE],AX[estid,,drop=FALSE]),
+                                         family=family,offset=offset[estid,,drop=FALSE],size=size[estid,,drop=FALSE])  
       }
       gamma.coefs <- sapply(gamma.fit, coef)
       
-      beta.coefs <- f2x(Xcr=xcr[estid,,drop=F],centerx=centerx,invsqrtm=invsqrtm,gamma=gamma.coefs[1:(kk+1),,drop=F],u=kComponent.fit$u[,1:kk,drop=F],
-                        comp=kComponent.fit$comp[,1:kk,drop=F])
+      beta.coefs <- f2x(Xcr=xcr[estid,,drop=FALSE],centerx=centerx,invsqrtm=invsqrtm,gamma=gamma.coefs[1:(kk+1),,drop=FALSE],u=kComponent.fit$u[,1:kk,drop=FALSE],
+                        comp=kComponent.fit$comp[,1:kk,drop=FALSE])
       
       if(is.null(AX)){
-        predict <- multivariatePredictGlm(Xnew=x[valid,,drop=F],family,
-                                          beta.coefs[,,drop=F],offset[valid,,drop=F])
+        predict <- multivariatePredictGlm(Xnew=x[valid,,drop=FALSE],family,
+                                          beta.coefs[,,drop=FALSE],offset[valid,,drop=FALSE])
       }else{
-        beta.coefs <- rbind(beta.coefs,gamma.coefs[-c(1:(kk+1)),,drop=F])
-        predict <- multivariatePredictGlm(Xnew=cbind(x[valid,,drop=F],AX[valid,,drop=F]),family,
-                                          beta.coefs[,,drop=F],offset[valid,,drop=F])
+        beta.coefs <- rbind(beta.coefs,gamma.coefs[-c(1:(kk+1)),,drop=FALSE])
+        predict <- multivariatePredictGlm(Xnew=cbind(x[valid,,drop=F],AX[valid,,drop=FALSE]),family,
+                                          beta.coefs[,,drop=FALSE],offset[valid,,drop=FALSE])
       }
       
       if(type=="auc"){
-        pred <- prediction(predict,y[valid,,drop=F])
+        pred <- prediction(predict,y[valid,,drop=FALSE])
         cv[1:ny,kk] <- c(unlist(performance(pred,measure="auc")@y.values))
       } else if(type%in%c("likelihood","aic","bic","aicc","mspe")){
-        cv[1:ny,kk]<- infoCriterion(ynew=y[valid,,drop=F],predict,family,
-                                    type=type,size=size[valid,,drop=F],npar=nrow(gamma.coefs))
+        cv[1:ny,kk]<- infoCriterion(ynew=y[valid,,drop=FALSE],predict,family,
+                                    type=type,size=size[valid,,drop=FALSE],npar=nrow(gamma.coefs))
       }
       
       #      }
       ###Caluclation for NULL model
       if(is.null(AX)){
-        gamma.fit <- multivariateGlm.fit(Y=y[estid,,drop=F],comp=NULL,family=family,
-                                         offset=offset[estid,,drop=F],
-                                         size=size[estid,,drop=F])
+        gamma.fit <- multivariateGlm.fit(Y=y[estid,,drop=FALSE],comp=NULL,family=family,
+                                         offset=offset[estid,,drop=FALSE],
+                                         size=size[estid,,drop=FALSE])
         xnew <- rep(1,length(valid))
       }else{
-        gamma.fit <- multivariateGlm.fit(Y=y[estid,,drop=F],comp=AX[estid,,drop=F],family=family,
-                                         offset=offset[estid,,drop=F],
-                                         size=size[estid,,drop=F]) 
-        xnew <- AX[valid,,drop=F]
+        gamma.fit <- multivariateGlm.fit(Y=y[estid,,drop=FALSE],comp=AX[estid,,drop=FALSE],family=family,
+                                         offset=offset[estid,,drop=FALSE],
+                                         size=size[estid,,drop=FALSE]) 
+        xnew <- AX[valid,,drop=FALSE]
       }
       
       beta.coefs <- sapply(gamma.fit, coef)
@@ -214,26 +214,26 @@ scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NUL
                                         beta.coefs,offset[valid,,drop=F]) 
       
       if(type=="auc"){
-        pred <- prediction(predict,y[valid,,drop=F])
+        pred <- prediction(predict,y[valid,,drop=FALSE])
         cvNull[1:ny] <- c(unlist(performance(pred,measure="auc")@y.values))
       } else if(type%in%c("likelihood","aic","bic","aicc","mspe")){
-        cvNull[1:ny] <- infoCriterion(ynew=y[valid,,drop=F],predict,family,
-                                      type=type,size=size[valid,,drop=F],npar=nrow(gamma.coefs))
+        cvNull[1:ny] <- infoCriterion(ynew=y[valid,,drop=FALSE],predict,family,
+                                      type=type,size=size[valid,,drop=FALSE],npar=nrow(gamma.coefs))
       }
     }
     return(list(cv=cv,cvNull=cvNull))
   }
 
   if(mc.cores>1) {
-    result <- mclapply(seq(nfolds),mainFolds,mc.silent=T,mc.cores=mc.cores)
+    result <- parallel::mclapply(seq(nfolds),mainFolds,mc.silent=TRUE,mc.cores=mc.cores)
   } else {
     result <- lapply(seq(nfolds),mainFolds)
   }
-  cv <- sapply(result,function(x) x$cv,simplify=F)
+  cv <- sapply(result,function(x) x$cv,simplify=FALSE)
   cv <- simplify2array(cv)
   cv <- apply(cv,c(1,2),mean)
   
-  cvNull <- sapply(result,function(x) x$cvNull,simplify=F)
+  cvNull <- sapply(result,function(x) x$cvNull,simplify=FALSE)
   cvNull <- simplify2array(cvNull)
   if(is.vector(cvNull)) {
     cvNull <- mean(cvNull)

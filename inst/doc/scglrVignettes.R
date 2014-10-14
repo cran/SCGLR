@@ -54,7 +54,7 @@ criterion <- t(apply(genus.cv,1,function(x) x/mean(x)))
 criterion.mean <- apply(criterion,2,mean) 
 K.cv <- which.min(criterion.mean)-1
 
-## ----plotCv,echo=FALSE,include=FALSE----------------------
+## ----plotCv, fig.align='center', fig.pos='!ht', fig.cap='Mean Squared Prediction Error (MSPE) as a function of the number of components.'----
 plot(0:K,criterion.mean, type="l",
      xlab="K, number of components", ylab="Criterion (MSPE)")
 Axis(side=1,at=0:K)
@@ -68,15 +68,13 @@ genus.scglr<-scglr(formula=formula,data=genus,family=family,
 ## ----eval=TRUE--------------------------------------------
 print(genus.scglr)
 
-## ----barplotScglr,include=FALSE---------------------------
+## ----barplotScglr, fig.align='center', fig.pos='!ht', fig.cap='Barplot of inertia per component'----
 barplot(genus.scglr)
 
-## ----plotSimple,include=FALSE-----------------------------
+## ----samplePlots, fig.align='center',fig.pos='!ht',fig.cap='Two sample plots',fig.subcap=c('Simple correlation plot','Correlation plot with linear predictors and covariates passing a threshold of $0.8$'),fig.show='hold',out.width='0.49\\linewidth'----
 plot(genus.scglr)
-
-## ----plotStyle,include=FALSE------------------------------
 plot(genus.scglr, threshold=0.8, predictors=TRUE)
 
-## ----pairsScglr,include=FALSE,eval=TRUE-------------------
+## ----pairsScglr,fig.align='center', fig.pos='!ht', fig.cap='Correlation plots on planes spanned by components 1, 3, and 5'----
 pairs(genus.scglr,components=c(1,3,5),ncol=2,label.size=0.5) 
 
