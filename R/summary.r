@@ -17,7 +17,7 @@ summary.SCGLR <- function(object, ...) {
   rho.pred <- as.data.frame(cor(object$lin.pred,object$compr))
   ncomp <- ncol(object$compr)
   if(ncomp>1) {
-    cmp_pairs <- combn(ncomp, 2, simplify=F)
+    cmp_pairs <- combn(ncomp, 2, simplify=FALSE)
   
     best_plane <- function(var) {
       magni <- lapply(cmp_pairs, function(pair) sum(var[pair]^2))
@@ -61,7 +61,7 @@ print.summary.SCGLR <- function(x, digits=3, cutoff=1, ...) {
   cat("Squared correlations with numerical covariates (in decreasing order):\n")
   print(x$rho, print.gap=2, digits=digits)
   
-  if( !is.na(x$rho.pred) ) {
+  if( is.data.frame(x$rho.pred) ) {
     cat("\nSquared correlations with linear predictors (in decreasing order):\n")  
     print(x$rho.pred ,print.gap=2, digits=digits)
   }

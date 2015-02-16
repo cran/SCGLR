@@ -1,6 +1,6 @@
-#' Supervised Component Generalized Linear Regression (SCGLR)
+#' Supervised Component Generalized Linear Regression
 #'
-#' SCGLR implements a new PLS regression approach in the multivariate generalized linear framework. The method
+#' SCGLR implements a new Partial Least Squares regression approach in the multivariate generalized linear framework. The method
 #' allows the joint modeling of random variables from different exponential family distributions, searching for 
 #' common PLS-type components. \code{\link{scglr}} and \code{\link{scglrCrossVal}} are the two main functions.
 #' The former constructs the components and performs the parameter estimation, while the
@@ -17,7 +17,7 @@
 #' @import expm
 #' @importFrom graphics barplot
 #' @import ggplot2 grid
-#' @import ROCR
+#' @import pROC
 NULL
 
 .onLoad <- function(libname,pkgname) {

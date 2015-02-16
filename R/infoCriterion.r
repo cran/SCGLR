@@ -25,12 +25,12 @@ infoCriterion <- function(ynew,pred,family,type,size=NULL,npar=0) {
   res <- rep(0,ny)
  # success <- ynew
   if(sum("bernoulli" %in% family)>0) {
-    tmpy <- ynew[,which(family %in% "bernoulli"),drop=F]
-    tmpp <- pred[,which(family %in% "bernoulli"),drop=F]
+    tmpy <- ynew[,which(family %in% "bernoulli"),drop=FALSE]
+    tmpp <- pred[,which(family %in% "bernoulli"),drop=FALSE]
     if(type=="mspe") {
       ldber <- apply((tmpy-tmpp)^2/(tmpp*(1-tmpp)),2,mean)
     } else {
-      ldber <- -2*apply(dbinom(tmpy,1,tmpp,log=T),2,sum)
+      ldber <- -2*apply(dbinom(tmpy,1,tmpp,log=TRUE),2,sum)
     }
     res[which(family=="bernoulli")] <- ldber
     success <- NULL
@@ -38,13 +38,13 @@ infoCriterion <- function(ynew,pred,family,type,size=NULL,npar=0) {
     ldber=0
   }
   if(sum("binomial" %in% family)>0) {
-    tmpy <- ynew[,which(family %in% "binomial"),drop=F]*size
-    tmpp <- pred[,which(family %in% "binomial"),drop=F]
+    tmpy <- ynew[,which(family %in% "binomial"),drop=FALSE]*size
+    tmpp <- pred[,which(family %in% "binomial"),drop=FALSE]
     
     if(type=="mspe"){
       ldbin <-  apply((tmpy-tmpp)^2/(tmpp*(1-tmpp)*size),2,mean)
     } else {
-      ldbin <- -2*apply(dbinom(tmpy,size,tmpp,log=T),2,sum)
+      ldbin <- -2*apply(dbinom(tmpy,size,tmpp,log=TRUE),2,sum)
     }
     success <- NULL
     res[which(family=="binomial")] <- ldbin
@@ -53,12 +53,12 @@ infoCriterion <- function(ynew,pred,family,type,size=NULL,npar=0) {
   }
   
   if(sum("poisson"%in%family)>0){
-    tmpy <- ynew[,which(family%in%"poisson"),drop=F]
-    tmpp <- pred[,which(family%in%"poisson"),drop=F]
+    tmpy <- ynew[,which(family%in%"poisson"),drop=FALSE]
+    tmpp <- pred[,which(family%in%"poisson"),drop=FALSE]
     if(type=="mspe"){
       ldpois <- apply((tmpy-tmpp)^2/tmpp,2,mean)#/tmpp
     } else {
-      ldpois <- -2*apply(dpois(tmpy,tmpp,log=T),2,sum)
+      ldpois <- -2*apply(dpois(tmpy,tmpp,log=TRUE),2,sum)
     }
     
     #lower <- (tmpp-alpha*sqrt(tmpp))
@@ -72,13 +72,13 @@ infoCriterion <- function(ynew,pred,family,type,size=NULL,npar=0) {
   }
   
   if(sum("gaussian"%in%family)>0){
-    tmpy <- ynew[,which(family%in%"gaussian"),drop=F]
-    tmpp <- pred[,which(family%in%"gaussian"),drop=F]   
+    tmpy <- ynew[,which(family%in%"gaussian"),drop=FALSE]
+    tmpp <- pred[,which(family%in%"gaussian"),drop=FALSE]   
     if(type=="mspe"){
       ldgaus <- apply((tmpy-tmpp)^2/tmpp,2,sum)
     } else {
-      sd <- matrix(sqrt(apply((tmpy-tmpp)^2,2,mean)),nobs,ny,byrow=T)
-      ldgaus <- -2*apply(dnorm(tmpy,tmpp,tmpp,log=T),2,sum)##à corriger
+      sd <- matrix(sqrt(apply((tmpy-tmpp)^2,2,mean)),nobs,ny,byrow=TRUE)
+      ldgaus <- -2*apply(dnorm(tmpy,tmpp,tmpp,log=TRUE),2,sum)##a corriger
     }
     #sd <- matrix(sqrt(apply((tmpy-tmpp)^2,2,mean)),nobs,ny,byrow=T)
     #success[,which(family%in%"gaussian")] <- (tmpy>=(tmpp-alpha*sqrt(sd)))&(tmpy<=(tmpp+alpha*sqrt(sd))) 

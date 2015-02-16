@@ -44,7 +44,7 @@ formula
 offset <- genus$surface
 
 ## ----eval=TRUE,cache=TRUE---------------------------------
-K <- 15
+K <- 4
 genus.cv <- scglrCrossVal(formula=formula,data=genus,family=family,
                           K=K,nfolds=5,type="mspe",offset=offset,
                           method=methodSR(l=1, s=1/2))
@@ -75,6 +75,6 @@ barplot(genus.scglr)
 plot(genus.scglr)
 plot(genus.scglr, threshold=0.8, predictors=TRUE)
 
-## ----pairsScglr,fig.align='center', fig.pos='!ht', fig.cap='Correlation plots on planes spanned by components 1, 3, and 5'----
-pairs(genus.scglr,components=c(1,3,5),ncol=2,label.size=0.5) 
+## ----pairsScglr,fig.align='center', fig.pos='!ht', fig.cap='Correlation plots on planes spanned by components'----
+pairs(genus.scglr,ncol=2,label.size=0.5) 
 

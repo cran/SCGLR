@@ -26,7 +26,7 @@
 #' form <- multivariateFormula(ny,c(nx,"I(lat*lon)"),c("geology"))
 #' 
 #' # split genus dataset
-#' sub <- sample(1:nrow(genus),100,replace=F)
+#' sub <- sample(1:nrow(genus),100,replace=FALSE)
 #' sub_fit <- (1:nrow(genus))[-sub]
 #' 
 #' # define family 

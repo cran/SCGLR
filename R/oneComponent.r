@@ -263,22 +263,24 @@ oneComponent <- function(X,Y,AX,family,size=NULL,offset=NULL,ds,crit,method)
     tol1<-1-crossprod(f,fnew)^2 
     # TODO verbose option
     if(FALSE) setTxtProgressBar(progress, iter)
-    
     u<-unew
     iter<-iter+1
   }
   # TODO verbose option
-  if(FALSE)close(progress)
+  if(FALSE)
+    close(progress)
   
   if(iter==maxit)
   {
     # TODO verbose option
-    if(FALSE)  message("  Warning !!! max number of iterations in oneComponent tol=", tol1)
+    if(FALSE)
+      message("  Warning !!! max number of iterations in oneComponent tol=", tol1)
     return(FALSE)
   }
   if(tol1 <= tol) {
     # TODO verbose option
-    if(FALSE) message("  Convergence in ",iter," iterations with ds=", ds, " and tol=", tol)    
+    if(FALSE) 
+      message("  Convergence in ",iter," iterations with ds=", ds, " and tol=", tol)    
   }
   return(u=u)
 }

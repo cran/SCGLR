@@ -60,7 +60,7 @@
 #' }
 scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NULL,offset=NULL,subset=NULL,
                            na.action=na.omit,crit=list(), method=methodSR(),mc.cores=1) {
-  if( (mc.cores>1) && ((.Platform$OS.type == "windows") || (!requireNamespace("parallel", quietly=T)))){
+  if( (mc.cores>1) && ((.Platform$OS.type == "windows") || (!requireNamespace("parallel", quietly=TRUE)))){
     warning("Sorry as parallel package is not available, I will use only one core!")
     mc.cores <- 1
   }
@@ -164,7 +164,7 @@ scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NUL
     
     kComponent.fit <- kComponents(X=xcr[estid,,drop=FALSE],Y=y[estid,,drop=FALSE],AX=AX[estid,,drop=FALSE],K=K,
                                   family=family,size=size[estid,,drop=FALSE],
-                                  offset=offset[estid,,drop=F],crit=crit,method=method)  
+                                  offset=offset[estid,,drop=FALSE],crit=crit,method=method)  
     for(kk in seq(K)){ 
       if(is.null(AX)){
         gamma.fit <- multivariateGlm.fit(Y=y[estid,,drop=FALSE],comp=kComponent.fit$comp[,1:kk,drop=FALSE],
@@ -183,13 +183,12 @@ scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NUL
                                           beta.coefs[,,drop=FALSE],offset[valid,,drop=FALSE])
       }else{
         beta.coefs <- rbind(beta.coefs,gamma.coefs[-c(1:(kk+1)),,drop=FALSE])
-        predict <- multivariatePredictGlm(Xnew=cbind(x[valid,,drop=F],AX[valid,,drop=FALSE]),family,
+        predict <- multivariatePredictGlm(Xnew=cbind(x[valid,,drop=FALSE],AX[valid,,drop=FALSE]),family,
                                           beta.coefs[,,drop=FALSE],offset[valid,,drop=FALSE])
       }
       
       if(type=="auc"){
-        pred <- prediction(predict,y[valid,,drop=FALSE])
-        cv[1:ny,kk] <- c(unlist(performance(pred,measure="auc")@y.values))
+        cvNull[1:ny] <- auc(roc(y[valid,,drop=FALSE],predict))
       } else if(type%in%c("likelihood","aic","bic","aicc","mspe")){
         cv[1:ny,kk]<- infoCriterion(ynew=y[valid,,drop=FALSE],predict,family,
                                     type=type,size=size[valid,,drop=FALSE],npar=nrow(gamma.coefs))
@@ -211,11 +210,10 @@ scglrCrossVal <-  function(formula,data,family,K=1,nfolds=5,type="mspe",size=NUL
       
       beta.coefs <- sapply(gamma.fit, coef)
       predict <- multivariatePredictGlm(Xnew=xnew,family,
-                                        beta.coefs,offset[valid,,drop=F]) 
+                                        beta.coefs,offset[valid,,drop=FALSE]) 
       
       if(type=="auc"){
-        pred <- prediction(predict,y[valid,,drop=FALSE])
-        cvNull[1:ny] <- c(unlist(performance(pred,measure="auc")@y.values))
+        cvNull[1:ny] <- auc(roc(y[valid,,drop=FALSE],predict))
       } else if(type%in%c("likelihood","aic","bic","aicc","mspe")){
         cvNull[1:ny] <- infoCriterion(ynew=y[valid,,drop=FALSE],predict,family,
                                       type=type,size=size[valid,,drop=FALSE],npar=nrow(gamma.coefs))

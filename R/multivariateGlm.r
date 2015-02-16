@@ -32,7 +32,7 @@
 #' form <- multivariateFormula(ny,c(nx,"I(lat*lon)"),c("geology"))
 #' 
 #' # split genus dataset
-#' sub <- sample(1:nrow(genus),100,replace=F)
+#' sub <- sample(1:nrow(genus),100,replace=FALSE)
 #' sub_fit <- (1:nrow(genus))[-sub]
 #' 
 #' # define family 
@@ -99,8 +99,8 @@ multivariateGlm<-  function(formula,data,family,size=NULL,offset=NULL,subset=NUL
   vnames <- names(x)
   fTypes <- sapply(x,is.factor)
   if(sum(fTypes)>0){
-    xFactors <- x[,fTypes,drop=F]
-    colnames(xFactors) <- colnames(x[,fTypes,drop=F])
+    xFactors <- x[,fTypes,drop=FALSE]
+    colnames(xFactors) <- colnames(x[,fTypes,drop=FALSE])
   }else{
     xFactors <- NULL
   }

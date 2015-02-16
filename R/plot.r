@@ -421,7 +421,7 @@ pairs.SCGLR <- function(x, ..., nrow=NULL, ncol=NULL, components=NULL) {
     stop("Invalid components for plane!")
   }
   # build pairs
-  cmp_pairs <- combn(ncomp, 2, simplify=F)
+  cmp_pairs <- combn(ncomp, 2, simplify=FALSE)
   
   # build plot list
   one_plot <- function(cmp_pair) {

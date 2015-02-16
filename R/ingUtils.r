@@ -40,7 +40,6 @@ updateGamma <- function(Z,X,AX,W,gamma,method){
 }
 
 
-
 hFunct<- function(z,X,AX,W,u,method)
 {
   #dim(W)=n*q
@@ -59,7 +58,7 @@ hFunct<- function(z,X,AX,W,u,method)
       # Pi_{T^ortho} Xu = Pi_{T^ortho} f 
       projWkforthoAX <- f - projWkfAX  
       #Pi_T z_k verif AX%*%solve(t(AX)%*%diag(W[,k])%*%AX,t(AX)%*%diag(W[,k])%*%z[,k])
-      #z W_k centrés-réduit
+      #z W_k standardized
       zk <- wtScale(z[,k],W[,k])#z[,k] - sum(W[,k]*z[,k])
       Wzk <- W[,k]*zk
       projWkzAX <- AX%*%solve(AXtWkAX,crossprod(AX,Wzk))      
@@ -69,7 +68,7 @@ hFunct<- function(z,X,AX,W,u,method)
       scalsqpfz <- sum(c(projWkforthoAX)*Wzk)^2#<Pi_{T^{ortho}}Xu|z_k>^2_{W_k} verif  (t(projWkforthoAX)%*%diag(W[,k])%*%z[,k])^2
       scalsqpfpf <- sum(c(projWkforthoAX)^2*W[,k])#||Pi_{T^{ortho}}Xu||_{W_k}^2    
       #term1psi <- sum(scalsqpfz/(scalsqpfpf*scalsqzz[k]))
-      ##comme z[,k] est W[,k] centré-réduit, le terme scalsqzz[k] disparait
+      ##comme z[,k] est W[,k] standardized, le terme scalsqzz[k] disparait
       term1psi <- sum(scalsqpfz/(scalsqpfpf))
       term2psi <- sum(Wzk*projWkzAX)
       psi <- psi+term1psi+term2psi     
@@ -81,10 +80,12 @@ hFunct<- function(z,X,AX,W,u,method)
       
       WprojWkOrthof <- W[,k]*projWkforthoAX#W_k Pi_{T^{ortho}}Xu
       ##verif diag(W[,k])%*%projWkforthoAX
-      PiorthoPrimeWkf <- WprojWkOrthof-W[,k]*AX%*%solve(AXtWkAX,crossprod(AX,WprojWkOrthof))#Pi_{T^{ortho}}^primeW_k\pi_{T^{ortho}}Xu
+      # PiorthoPrimeWkf <- WprojWkOrthof-W[,k]*AX%*%solve(AXtWkAX,crossprod(AX,WprojWkOrthof))#Pi_{T^{ortho}}^primeW_k\pi_{T^{ortho}}Xu
+      
       ##verif cf  PiorthoPrimeWkz
       #term2 <-  scalsqpfz*c(crossprod(X,PiorthoPrimeWkf))/(scalsqpfpf^2*scalsqzz[k])  
-      term2 <-  scalsqpfz*c(crossprod(X,PiorthoPrimeWkf))/(scalsqpfpf^2)  
+      
+      term2 <-  scalsqpfz*c(crossprod(X,WprojWkOrthof))/(scalsqpfpf^2)  
       gradpsi <- gradpsi +(term1-term2)
     }
     gradpsi <- 2*gradpsi
@@ -99,26 +100,24 @@ hFunct<- function(z,X,AX,W,u,method)
       #calcul de grad de psi     
       XprimeWz <- crossprod(X,Wzk) #X'W_k z_k
       term1 <- c(XprimeWz%*%crossprod(XprimeWz,u))/(scalsqpfpf)
-      
-      
       term2 <-  scalsqpfz*c(crossprod(X,W[,k]*f))/(scalsqpfpf^2)  
       gradpsi <- gradpsi +(term1-term2)
     }
+    gradpsi <- 2*gradpsi
   }
   n <- nrow(X)    
   # calcul phi Component Variance: cv
   if(method$phi=="cv") {
-    phi <- c(crossprod(f))    
+    phi <- c(crossprod(f))/n    
     # calcul grad phi
     gradphi <- c(2*crossprod(X,f/n))
   } else { 
     ### autre calcul de phi avec l>=1 : vpi: Variable Powered Inertia
     scalsqfX <- colSums(f*X/n)
+    XtWX <- crossprod(X)/n
     phi <- (sum((scalsqfX^2)^method$l))^(1/method$l)    
     # calcul de grad phi
-    term1 <- (scalsqfX^2)^(method$l-1)
-    term2 <- scalsqfX * crossprod(X)
-    gradphi <- (2*method$l*colSums(term2%*%diag(term1)))*phi^(1/method$l-1)
+    gradphi <- 2*phi^(1-method$l)*rowSums(XtWX%*%diag(scalsqfX)^(2*method$l-1))
   }
   # calcul de h (s in R+)
   #h = log(psi)+method$s*log(phi)
@@ -126,6 +125,7 @@ hFunct<- function(z,X,AX,W,u,method)
   # calcul de h (s in [0..1])
   h = (1-method$s)*log(psi)+method$s*log(phi)
   gradh=(1-method$s)*gradpsi/psi+method$s*gradphi/phi    
-  
-  return(list(h=h, gradh=gradh))
+  return(list(h=h, gradh=gradh,psi=psi,gradpsi=gradpsi,phi=phi,gradphi=gradphi))
 }
+
+
