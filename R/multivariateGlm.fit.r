@@ -1,5 +1,6 @@
 #' @rdname multivariateGlm
 #' @export 
+#' @importFrom stats as.formula glm 
 #' @param Y matrix of dependent variables.
 #' @param comp matrix of covariates.
 # @param family a vector of character giving the family distribution of each response

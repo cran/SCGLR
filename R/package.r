@@ -16,7 +16,7 @@
 #' @import Formula
 #' @import expm
 #' @importFrom graphics barplot
-#' @import ggplot2 grid
+#' @import ggplot2
 #' @import pROC
 NULL
 

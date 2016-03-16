@@ -1,9 +1,15 @@
-# remove warnings due to ggplot2 syntax strangeness
-utils::globalVariables(c("comp","y","label","angle","hjust"))
+if(getRversion()>="2.15.1") {
+  # remove warnings due to ggplot2 syntax strangeness
+  utils::globalVariables(c("comp","y","label","angle","hjust"))
+}
+
 
 #' SCGLR generic plot
 #' @export
+#' @importFrom stats cor aggregate
+#' @importFrom grid circleGrob gpar
 #' @method plot SCGLR
+#' @description SCGLR generic plot
 #' @param x an object from SCGLR class.
 #' @param \dots optional arguments (see \link{customize}).
 #' @param style named list of values used to customize the plot (see \link{customize})
@@ -150,14 +156,21 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
   # build base plot
   p <- qplot((-1:1)*cust("expand",1.0), (-1:1)*cust("expand",1.0), geom="blank")+
     coord_fixed()+
-    # thicker x unit arrow
     xlab(paste(axis_names[1],"(",round(100*inertia[1],2),"%)")) + 
-    geom_hline(yintercept=0)+
-    geom_segment(aes(x=-1.1,xend=1.1,y=0,yend=0),size=1,arrow=arrow(length=unit(0.02,"npc")))+
+    ylab(paste(axis_names[2],"(",round(100*inertia[2],2),"%)")) 
+
+  if(observations) {
+    p <- p +
+      geom_hline(yintercept=0,size=0.5)+
+      geom_vline(xintercept=0,size=0.5)
+  }
+  if(covariates||predictors) {
+    p <- p +
+    # thicker x unit arrow
+      geom_segment(aes(x=-1.1,xend=1.1,y=0,yend=0),size=1,arrow=arrow(length=unit(0.02,"npc")))+
     # thicker y unit arrow
-    ylab(paste(axis_names[2],"(",round(100*inertia[2],2),"%)")) + 
-    geom_vline(xintercept=0)+
-    geom_segment(aes(y=-1.1,yend=1.1,x=0,xend=0),size=1,arrow=arrow(length=unit(0.02,"npc")))
+      geom_segment(aes(y=-1.1,yend=1.1,x=0,xend=0),size=1,arrow=arrow(length=unit(0.02,"npc")))
+  }
   
   # plot title
   if(has_cust("title", FALSE)) {
@@ -209,6 +222,8 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
         alpha=cust("observations.alpha",1)
       )
     }
+    tmp <- data.frame(x=c(0,0),y=range(obs$y))
+    p <- p + geom_line(aes(x,y),data=tmp)
   }
   
   # add linear predictor arrows
@@ -364,7 +379,7 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
     
     # draw labels ?
     if(cust("factor.labels",TRUE)) {
-      p <- p + geom_text(
+      p <- p + geom_label(
         aes_string(x="x",y="y",label=factor),
         data=bary,
         color=cust("factor.labels.color","black"),
@@ -380,20 +395,52 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
 #' @title Barplot of percent of overall X variance captured by component
 #' @export
 #' @method barplot SCGLR
+#' @description A custom plot for SCGLR objetcs
 #' @param height object of class 'SCGLR', usually a result of running \code{\link{scglr}}.
 #' @param \dots optional arguments.
+#' @param plane a size-2 vector (or comma separated string) indicating which components are plotted (eg: c(1,2) or "1,2").
 #' @return an object of class ggplot.
 #' @seealso For barplot application see examples in \code{\link{plot.SCGLR}}.
-barplot.SCGLR <- function(height, ...) {
-  inertia <- data.frame(inertia=height$inertia,comp=1:length(height$inertia))
-  qplot(comp, inertia, data=inertia, geom="bar", stat="identity", width=0.5) +
+#' @importFrom scales percent_format
+barplot.SCGLR <- function(height, ..., plane=NULL) {
+  if(!is.null(plane)) {
+    # process plane
+    if(is.character(plane)) {
+      plane <- as.integer(trim(unlist(strsplit(plane, ","))))
+    }
+    
+    # sanity checking
+    if(length(plane) !=2 ) {
+      stop("Plane should have two components!")
+    }
+    if((min(plane)<1) || (max(plane)>length(height$inertia))) {
+      stop("Invalid components for plane!")
+    }
+  }
+  
+  # build data frame from inertia
+  inertia <- data.frame(
+      inertia=height$inertia,
+      comp=1:length(height$inertia),
+      plane_color="black",
+      stringsAsFactors = F)
+  
+  # recolor unused component in gray
+  if(!is.null(plane))
+    inertia$plane[-plane] <- "gray"
+  
+  ggplot(data=inertia)+geom_bar(aes(comp,inertia),fill=inertia$plane,stat="identity",width=0.5) +
     scale_x_discrete(labels=names(height$inertia),limits=1:length(inertia$comp))+
-    labs(x="Components", y="Inertia", title="Inertia per component\n", ...)
+    scale_y_continuous(labels=percent_format())+
+    labs(x="Components", y="Inertia", title="Inertia per component\n", ...)#+
+    #geom_text(aes(comp,inertia,label=round(100*inertia,2)),vjust=0)
 }
 
 #' @title Pairwise scglr plot on components
 #' @export
+#' @importFrom utils combn
 #' @method pairs SCGLR
+#' @description Pairwise scglr plot on components
 #' @param x object of class 'SCGLR', usually a result of running \code{\link{scglr}}.
 #' @param \dots optionally, further arguments forwarded to \code{link{plot.SCGLR}}.
 #' @param nrow number of rows of the grid layout.
@@ -441,6 +488,7 @@ pairs.SCGLR <- function(x, ..., nrow=NULL, ncol=NULL, components=NULL) {
 }
 
 ## equivalent du par pour les ggplot2
+#' @importFrom grid viewport grid.newpage pushViewport viewport grid.layout
 vp.layout <- function(x, y) viewport(layout.pos.row=x, layout.pos.col=y)
 arrange <- function(..., nrow=NULL, ncol=NULL, as.table=FALSE) {
   dots <- list(...)

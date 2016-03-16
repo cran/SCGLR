@@ -1,6 +1,7 @@
 #@title Function that computes a submatrix of metric M^(-1/2)
 #@export 
 #@param x the column vector of a regressor or factor
+#' @importFrom stats model.matrix
 metricBloc <- function(x){
   z <- model.matrix(~x)[,-1,drop=FALSE]
   z <- scale(z,center=TRUE,scale=FALSE)

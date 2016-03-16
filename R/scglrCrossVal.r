@@ -1,5 +1,10 @@
+if(getRversion()>="2.15.1") {
+  utils::globalVariables(c("na.omit","coef"))
+}
+
 #' Function that fits and selects the number of component by cross-validation.
 #' @export 
+#' @importFrom stats model.matrix model.extract coef cor
 #' @param formula an object of class "Formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted.
 #' @param data the data frame to be modeled.
 #' @param family a vector of character of length q specifying the distributions of the responses. Bernoulli, binomial, poisson and gaussian are allowed.

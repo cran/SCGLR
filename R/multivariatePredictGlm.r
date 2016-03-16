@@ -1,5 +1,7 @@
 #' @title Function that predicts the responses from the covariates for a new sample
 #' @export
+#' @importFrom stats as.formula model.matrix
+#' @description  Function that predicts the responses from the covariates for a new sample
 #' @param Xnew a data frame containing the values of the covariates for the new sample.
 #' @param family a vector of character specifying the distributions of the responses.
 #' @param beta the matrix of coefficients estimated from the calibration sample.

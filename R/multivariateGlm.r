@@ -2,7 +2,8 @@
 #' @description \code{multivariateGlm} is used to fit multivariate generalized linear models
 #' specified by a symbolic formula together with the distributions of the responses. 
 #' This function performs a simple GLM fit for each dependent variable with the associated distribution.
-#' @export 
+#' @export
+#' @importFrom stats model.matrix model.extract 
 #' @param formula an object of class \code{Formula} (or one that can be coerced to that class): a symbolic description of the model to be fitted.
 #' @param data the data frame to be modeled.
 #' @param family a vector of character giving the family distribution of each response.

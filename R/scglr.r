@@ -1,6 +1,11 @@
+if(getRversion()>="2.15.1") {
+  utils::globalVariables(c("na.omit","coef"))
+}
+
 #' @title Function that fits the scglr model
 #' @description Calculates the components to predict all the dependent variables.
 #' @export scglr
+#' @importFrom stats model.matrix model.extract coef cor
 #' @param formula an object of class \code{Formula} (or one that can be coerced to that class): a symbolic description of the model to be fitted.
 #' @param data  a data frame to be modeled.
 #' @param family a vector of character of the same length as the number of dependent variables: 

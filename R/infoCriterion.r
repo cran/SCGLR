@@ -1,5 +1,7 @@
 #' @title Function that calculates cross-validation selection criteria
 #' @export
+#' @importFrom stats dbinom dpois dnorm
+#' @description Function that calculates cross-validation selection criteria
 #' @param ynew data matrix corresponding to the observations used as test sample.
 #' @param pred predicted value of the linear predictor obtained from Xnew and the estimated parameters.
 #' @param family a vector of the same length as the number of responses containing characters 

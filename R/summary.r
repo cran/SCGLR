@@ -1,4 +1,6 @@
 #' @export
+#' @importFrom stats cor
+#' @importFrom utils combn
 #' @title Summarizing SCGLR fits
 #' @description Summary method for class "SCGLR".
 #' @method summary SCGLR

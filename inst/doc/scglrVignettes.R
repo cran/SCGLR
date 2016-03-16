@@ -43,12 +43,6 @@ formula <- multivariateFormula(ny,c(nx,"I(lon*lat)"),"geology")
 formula
 offset <- genus$surface
 
-## ----eval=TRUE,cache=TRUE---------------------------------
-K <- 4
-genus.cv <- scglrCrossVal(formula=formula,data=genus,family=family,
-                          K=K,nfolds=5,type="mspe",offset=offset,
-                          method=methodSR(l=1, s=1/2))
-
 ## ----tempo,eval=TRUE--------------------------------------
 criterion <- t(apply(genus.cv,1,function(x) x/mean(x)))
 criterion.mean <- apply(criterion,2,mean) 
@@ -59,11 +53,6 @@ plot(0:K,criterion.mean, type="l",
      xlab="K, number of components", ylab="Criterion (MSPE)")
 Axis(side=1,at=0:K)
 abline(v=K.cv,col=2)
-
-## ----eval=TRUE,cache=TRUE---------------------------------
-genus.scglr<-scglr(formula=formula,data=genus,family=family,
-                   K=K.cv,size=NULL,offset=offset,
-                   method=methodSR(l=1,s=1/2))
 
 ## ----eval=TRUE--------------------------------------------
 print(genus.scglr)
