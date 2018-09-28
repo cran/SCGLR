@@ -18,4 +18,3 @@ a list containing elements named as the arguments.
 Auxiliary function for \code{scglr} fitting used to 
 construct a convergence control argument.
 }
-

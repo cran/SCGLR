@@ -4,12 +4,10 @@
 \alias{barplot.SCGLR}
 \title{Barplot of percent of overall X variance captured by component}
 \usage{
-\method{barplot}{SCGLR}(height, ..., plane = NULL)
+\method{barplot}{SCGLR}(height, ...)
 }
 \arguments{
 \item{height}{object of class 'SCGLR', usually a result of running \code{\link{scglr}}.}
-
-\item{plane}{a size-2 vector (or comma separated string) indicating which components are plotted (eg: c(1,2) or "1,2").}
 
 \item{\dots}{optional arguments.}
 }
@@ -17,9 +15,9 @@
 an object of class ggplot.
 }
 \description{
-A custom plot for SCGLR objetcs
+Barplot of percent of overall X variance captured by component
 }
 \seealso{
 For barplot application see examples in \code{\link{plot.SCGLR}}.
 }
-
+\keyword{internal}

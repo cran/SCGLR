@@ -12,6 +12,6 @@
 \item{\dots}{Not used.}
 }
 \description{
-Prints inertia per component and deviance for each Y.
+Prints inertia per component and residual and null deviance for each Y.
 }
-
+\keyword{internal}

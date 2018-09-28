@@ -4,18 +4,24 @@
 \alias{multivariateFormula}
 \title{Formula construction}
 \usage{
-multivariateFormula(namesY, namesX, namesAX = NULL)
+multivariateFormula(Y, X = NULL, ..., A = NULL, additional = NULL,
+  data = NULL)
 }
 \arguments{
-\item{namesY}{a vector of character containing the names of the dependent variables.}
+\item{Y}{a formula or a vector of character containing the names of the dependent variables.}
 
-\item{namesX}{a vector of character containing the names of the covariates (X) involved
-in the components.}
+\item{X}{a vector of character containing the names of the covariates (X) involved in the components or a list of it.}
 
-\item{namesAX}{a vector of character containing the names of the additional covariates.}
+\item{...}{additional groups of covariates (theme)}
+
+\item{A}{a vector of character containing the names of the additional covariates.}
+
+\item{additional}{logical (if A is not provided, should we consider last X to be additional covariates)}
+
+\item{data}{a data frame against which formula's variable will be checked}
 }
 \value{
-an object of class \code{Formula}.
+an object of class \code{MultivariateFormula, Formula, formula} with additional attributes: Y, X, A, X_vars, Y_vars,A_vars,XA_vars, YXA_vars, additional
 }
 \description{
 Helper function for building multivariate scglr formula.
@@ -23,4 +29,25 @@ Helper function for building multivariate scglr formula.
 NOTE: Interactions involving factors are not allowed for now.
 For interactions between two quantitative variables, use \code{I(x*y)} as usual.
 }
-
+\details{
+If Y is given as a formula, groups of covariates must be separated by \code{|} (pipes). To declare last
+group as additional covariates, one can use \code{||} (double pipes) as last group separator or set
+\code{additional} parameter as \code{TRUE}.
+}
+\examples{
+\dontrun{
+# build multivariate formula
+ny <- c("y1","y2")
+nx1 <- c("x11","x12")
+nx2 <- c("x21","x22")
+nadd <- c("add1","add2")
+form <- multivariateFormula(ny,nx1,nx2,nadd,additional=T)
+form2 <- multivariateFormula(ny,list(nx1,nx2,nadd),additional=T)
+form3 <- multivariateFormula(ny,list(nx1,nx2),A=nadd)
+form4 <- multivariateFormula(y1+y2~x11+x12|x21+x22||add1+add2)
+# Print formulas
+form
+form2
+form3
+}
+}

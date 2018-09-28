@@ -20,7 +20,7 @@ form <- multivariateFormula(ny,c(nx,"I(lat*lon)"),c("geology"))
 sub <- sample(1:nrow(genus),100,replace=FALSE)
 sub_fit <- (1:nrow(genus))[-sub]
 
-# define family 
+# define family
 fam <- rep("poisson",length(ny))
 
 # fit the model
@@ -33,11 +33,14 @@ xnew <- model.matrix(form, data=genus[sub,], rhs=1:2)[,-1]
 
 # prediction based on the scglr approch
 pred.scglr <- multivariatePredictGlm(xnew,family=fam,beta=genus.scglr$beta,offset=genus$surface[sub])
-cor.scglr <-diag(cor(pred.scglr,genus[sub,ny])) 
+cor.scglr <-diag(cor(pred.scglr,genus[sub,ny]))
 plot(cor.scglr, col="red",ylim=c(-1,1))
 
 # prediction based on classical poisson glm
-genus.glm <- multivariateGlm(formula=form, data=genus, family=fam, offset=genus$surface, subset=sub_fit)
+X <- model.matrix(form, data=genus)[,-1]
+Y <- genus[,ny]
+genus.glm <- multivariateGlm.fit(Y[sub_fit,,drop=FALSE],X[sub_fit,,drop=FALSE],
+                                 family=fam, offset=matrix(genus$surface[sub_fit],length(sub_fit),length(ny)),size=NULL)
 coefs <- sapply(genus.glm,coef)
 
 # note rhs parameter is introduced to take into account that the covariate part of

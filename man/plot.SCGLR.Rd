@@ -4,17 +4,17 @@
 \alias{plot.SCGLR}
 \title{SCGLR generic plot}
 \usage{
-\method{plot}{SCGLR}(x, ..., style = getOption("plot.SCGLR"), plane = c(1,
-  2))
+\method{plot}{SCGLR}(x, ..., style = getOption("plot.SCGLR"),
+  plane = c(1, 2))
 }
 \arguments{
 \item{x}{an object from SCGLR class.}
 
+\item{\dots}{optional arguments (see \link{customize}).}
+
 \item{style}{named list of values used to customize the plot (see \link{customize})}
 
 \item{plane}{a size-2 vector (or comma separated string) indicating which components are plotted (eg: c(1,2) or "1,2").}
-
-\item{\dots}{optional arguments (see \link{customize}).}
 }
 \value{
 an object of class \code{\link{ggplot}}.
@@ -58,6 +58,5 @@ plot(genus.scglr, predictors=TRUE, factor=TRUE)
 
 pairs(genus.scglr)
 
-} 
 }
-
+}

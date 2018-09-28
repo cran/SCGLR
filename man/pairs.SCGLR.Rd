@@ -4,18 +4,19 @@
 \alias{pairs.SCGLR}
 \title{Pairwise scglr plot on components}
 \usage{
-\method{pairs}{SCGLR}(x, ..., nrow = NULL, ncol = NULL, components = NULL)
+\method{pairs}{SCGLR}(x, ..., nrow = NULL, ncol = NULL,
+  components = NULL)
 }
 \arguments{
 \item{x}{object of class 'SCGLR', usually a result of running \code{\link{scglr}}.}
+
+\item{\dots}{optionally, further arguments forwarded to \code{\link{plot.SCGLR}}.}
 
 \item{nrow}{number of rows of the grid layout.}
 
 \item{ncol}{number of columns of the grid layout.}
 
 \item{components}{vector of integers selecting components to plot (default is all components).}
-
-\item{\dots}{optionally, further arguments forwarded to \code{link{plot.SCGLR}}.}
 }
 \description{
 Pairwise scglr plot on components
@@ -23,4 +24,3 @@ Pairwise scglr plot on components
 \seealso{
 For pairs application see examples in \code{\link{plot.SCGLR}}
 }
-

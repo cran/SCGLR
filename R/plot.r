@@ -1,13 +1,12 @@
 if(getRversion()>="2.15.1") {
-  # remove warnings due to ggplot2 syntax strangeness
+# remove warnings due to ggplot2 syntax strangeness
   utils::globalVariables(c("comp","y","label","angle","hjust"))
 }
-
 
 #' SCGLR generic plot
 #' @export
 #' @importFrom stats cor aggregate
-#' @importFrom grid circleGrob gpar
+#' @importFrom grid gpar circleGrob grid.newpage pushViewport viewport grid.layout
 #' @method plot SCGLR
 #' @description SCGLR generic plot
 #' @param x an object from SCGLR class.
@@ -17,81 +16,81 @@ if(getRversion()>="2.15.1") {
 #' @return an object of class \code{\link{ggplot}}.
 #' @examples \dontrun{
 #' library(SCGLR)
-#' 
+#'
 #' # load sample data
 #' data(genus)
-#' 
+#'
 #' # get variable names from dataset
 #' n <- names(genus)
 #' ny <- n[grep("^gen",n)]    # Y <- names that begins with "gen"
 #' nx <- n[-grep("^gen",n)]   # X <- remaining names
-#' 
+#'
 #' # remove "geology" and "surface" from nx
 #' # as surface is offset and we want to use geology as additional covariate
 #' nx <-nx[!nx%in%c("geology","surface")]
-#' 
+#'
 #' # build multivariate formula
 #' # we also add "lat*lon" as computed covariate
 #' form <- multivariateFormula(ny,c(nx,"I(lat*lon)"),c("geology"))
-#' 
+#'
 #' # define family
 #' fam <- rep("poisson",length(ny))
-#' 
+#'
 #' genus.scglr <- scglr(formula=form,data = genus,family=fam, K=4,
 #'  offset=genus$surface)
-#' 
+#'
 #' summary(genus.scglr)
-#' 
+#'
 #' barplot(genus.scglr)
-#' 
+#'
 #' plot(genus.scglr)
-#' 
+#'
 #' plot(genus.scglr, predictors=TRUE, factor=TRUE)
-#' 
+#'
 #' pairs(genus.scglr)
 #'
-#' } 
-plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
+#' }
+plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1, 2)) {
   data <- x
-  if(class(data)!="SCGLR") 
+  if (class(data) != "SCGLR")
     stop("This plot function need an SCGLR result")
-  
-  if(dim(data$compr)[2]<2)
+
+  if (dim(data$compr)[2] < 2)
     stop("At least two axes are needed for this kind of plot!")
-  
+
   # customize from remaining arguments
   dots <- list(...)
   # merged with style argument
-  if(!is.null(style)) {
+  if (!is.null(style)) {
     style[names(dots)] <- dots
     dots <- style
   }
   allowed_cust <- c(
-    "title","expand","labels.offset","labels.auto","labels.size","threshold",
+    "title", "expand", "labels.offset", "labels.auto", "labels.size", "threshold",
     "observations",
-    "observations.factor","observations.size","observations.color",
+    "observations.factor", "observations.size", "observations.color",
     "observations.alpha",
     "predictors",
-    "predictors.color","predictors.arrows","predictors.arrows.color",
-    "predictors.labels","predictors.labels.color","predictors.labels.size",
+    "predictors.color", "predictors.arrows", "predictors.arrows.color",
+    "predictors.labels", "predictors.labels.color", "predictors.labels.size",
     "predictors.labels.auto",
-    "predictors.alpha","predictors.arrows.alpha","predictors.labels.alpha",
+    "predictors.alpha", "predictors.arrows.alpha", "predictors.labels.alpha",
     "covariates",
-    "covariates.color","covariates.arrows","covariates.arrows.color",
-    "covariates.labels","covariates.labels.color","covariates.labels.size",
+    "covariates.color", "covariates.arrows", "covariates.arrows.color",
+    "covariates.labels", "covariates.labels.color", "covariates.labels.size",
     "covariates.labels.auto",
-    "covariates.alpha","covariates.arrows.alpha","covariates.labels.alpha",
+    "covariates.alpha", "covariates.arrows.alpha", "covariates.labels.alpha",
     "factor",
-    "factor.points","factor.points.size","factor.points.shape",
-    "factor.labels","factor.labels.color","factor.labels.size"
+    "factor.points", "factor.points.size", "factor.points.shape",
+    "factor.labels", "factor.labels.color", "factor.labels.size"
   )
   match_cust <- function(key) {
     # build regexp  foo.bar  --> ^foo[^.]*\\.bar[^.]*$
-    key2 <- paste("^",gsub("\\.","[^.]*\\\\.",key),"[^.]*$",sep="")
+    key2 <- paste("^", gsub("\\.", "[^.]*\\\\.", key), "[^.]*$", sep="")
     # find matching cust key
-    key2 <- grep(key2,allowed_cust,value=TRUE)
+    key2 <- grep(key2, allowed_cust, value=TRUE)
     # if not found (length==0) or ambiguity (length >1) revert to original
-    if(length(key2)!=1)
+    if(length(key2) != 1)
       key2 <- key
     key2
   }
@@ -100,7 +99,7 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
   # get custom value from key (if not found return default value)
   cust <- function(key, def=NULL) {
     if(is.null(key)||is.null(dots[[key]])) {
-      return(def) 
+      return(def)
     } else {
       return(dots[[key]])
     }
@@ -110,30 +109,30 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
     key <- cust(key, def)
     !is.null(key) && (!is.logical(key) || key)
   }
-  
+
   labels.offset <- cust("labels.offset",0.01)
   labels.auto <- cust("labels.auto",TRUE)
   labels.size <- cust("labels.size",1)
-    
+
   # process plane
   if(is.character(plane)) {
     plane <- as.integer(trim(unlist(strsplit(plane,","))))
   }
-  
+
   # sanity checking
-  if(length(plane) !=2 ) {
+  if(length(plane) != 2 ) {
     stop("Plane should have two components!")
   }
   if((min(plane)<1) || (max(plane)>ncol(data$compr))) {
     stop("Invalid components for plane!")
   }
-  
+
   # plan
   axis_names <- colnames(data$compr)[plane]
-  
+
   # check factor
   factor <- cust("factor",NULL)
-  if(!is.null(factor)&&(is.character(factor)||factor)) {
+  if(!is.null(factor) && (is.character(factor) || factor)) {
     if(is.logical(factor)) {
       if(is.null(data$xFactors))
         stop("No factor in data!")
@@ -144,7 +143,7 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
         stop("Invalid factor!")
     }
   }
-  
+
   # inertia
   inertia <- data$inertia[plane]
 
@@ -152,26 +151,19 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
   covariates <- has_cust("covariates",TRUE)
   predictors <- has_cust("predictors",FALSE)
   observations <- has_cust("observations",FALSE)
-  
+
   # build base plot
   p <- qplot((-1:1)*cust("expand",1.0), (-1:1)*cust("expand",1.0), geom="blank")+
     coord_fixed()+
-    xlab(paste(axis_names[1],"(",round(100*inertia[1],2),"%)")) + 
-    ylab(paste(axis_names[2],"(",round(100*inertia[2],2),"%)")) 
-
-  if(observations) {
-    p <- p +
-      geom_hline(yintercept=0,size=0.5)+
-      geom_vline(xintercept=0,size=0.5)
-  }
-  if(covariates||predictors) {
-    p <- p +
     # thicker x unit arrow
-      geom_segment(aes(x=-1.1,xend=1.1,y=0,yend=0),size=1,arrow=arrow(length=unit(0.02,"npc")))+
+    xlab(paste(axis_names[1],"(",round(100*inertia[1],2),"%)")) +
+    geom_hline(yintercept=0)+
+    geom_segment(aes(x=-1.1,xend=1.1,y=0,yend=0),size=1,arrow=arrow(length=unit(0.02,"npc")))+
     # thicker y unit arrow
-      geom_segment(aes(y=-1.1,yend=1.1,x=0,xend=0),size=1,arrow=arrow(length=unit(0.02,"npc")))
-  }
-  
+    ylab(paste(axis_names[2],"(",round(100*inertia[2],2),"%)")) +
+    geom_vline(xintercept=0)+
+    geom_segment(aes(y=-1.1,yend=1.1,x=0,xend=0),size=1,arrow=arrow(length=unit(0.02,"npc")))
+
   # plot title
   if(has_cust("title", FALSE)) {
     p <- p + ggtitle(cust("title"))
@@ -184,9 +176,9 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
       }
     } else {
       if(covariates||predictors) {
-        p <- p + ggtitle("Correlation plot\n")      
+        p <- p + ggtitle("Correlation plot\n")
       } else {
-        p <- p + ggtitle("SCGLR Plot\n")      
+        p <- p + ggtitle("SCGLR Plot\n")
       }
     }
   }
@@ -198,12 +190,12 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
   # add threshold circle
   if((covariates||predictors)&&has_cust("threshold"))
     p <- p + annotation_custom(circleGrob(r=0.5*cust("threshold"),gp=gpar(fill=NA,lty="dashed")),-1,1,-1,1)
-  
+
   # add observations
   if(observations) {
     obs <- as.data.frame(data$compr[,plane])
     names(obs) <- c("x","y")
-    
+
     # colored according to factor ?
     if(!is.null(factor)&&(cust("observations.factor",FALSE))) {
       obs <- cbind(obs,data$xFactors[factor])
@@ -215,17 +207,15 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
       )
     } else {
       p <- p + geom_point(
-        aes(x=x,y=y),
+        aes(x=x, y=y),
         data=obs,
         size=cust("observations.size",1),
         color=cust("observations.color","black"),
         alpha=cust("observations.alpha",1)
       )
     }
-    tmp <- data.frame(x=c(0,0),y=range(obs$y))
-    p <- p + geom_line(aes(x,y),data=tmp)
   }
-  
+
   # add linear predictor arrows
   if(predictors) {
     predictors <- cust("predictors")
@@ -244,7 +234,7 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
       co$labels.alpha <- cust("predictors.labels.alpha",co$alpha)
       co$labels.size <- cust("predictors.labels.size",4*labels.size)
     }
-    
+
     # adjust label position
     co$angle <- atan2(co$y,co$x)*180/pi
     co$hjust <- ifelse(abs(co$angle)>90,1,0)
@@ -253,19 +243,19 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
     } else {
       co$angle <- 0
     }
-    
+
     # filter according to user's will
     if(is.character(predictors)) {
-      co <- co[co$label %in% predictors,]      
+      co <- co[co$label %in% predictors,]
     }
-    
+
     # filter according to given threshold
     if(cust("threshold",FALSE)>0)
       co <- co[co$norm>cust("threshold"),]
-    
+
     if(nrow(co)==0) {
       warning("No predictors with correlation higher than threshold value ",cust("threshold"),"!")
-    } else {      
+    } else {
       # draw arrows ?
       if(cust("predictors.arrows",TRUE)) {
         p <- p + geom_segment(
@@ -280,7 +270,7 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
         co$hjust <- 0.5
         co$angle <- 0
       }
-      
+
       # draw labels ?
       if(cust("predictors.labels",TRUE)) {
         p <- p + geom_text(
@@ -291,9 +281,9 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
           size=co$labels.size
         )
       }
-    }    
+    }
   }
-    
+
   # add co-variate arrows
   if(covariates) {
     covariates <- cust("covariates")
@@ -321,7 +311,7 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
     } else {
       co$angle <- 0
     }
-    
+
     # filter according to users's will
     if(is.character(covariates)) {
       co <- co[co$label %in% covariates,]
@@ -330,7 +320,7 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
     # filter according to given threshold
     if(cust("threshold",FALSE)>0)
       co <- co[co$norm>cust("threshold"),]
-    
+
     if(nrow(co)==0) {
       warning("No correlation higher than threshold value ",cust("threshold"),"!")
     } else {
@@ -348,7 +338,7 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
         co$hjust <- 0.5
         co$angle <- 0
       }
-      
+
       # draw labels ?
       if(cust("covariates.labels",TRUE)) {
         p <- p + geom_text(
@@ -366,7 +356,7 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
   if(!is.null(factor)) {
     bary <- aggregate(data$compr[,plane],data$xFactors[factor],mean)
     names(bary) <- c(factor,"x","y")
-    
+
     # draw points ?
     if(cust("factor.points",TRUE)) {
       p <- p + geom_point(
@@ -376,10 +366,10 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
         shape=cust("factor.points.shape",13)
         )
     }
-    
+
     # draw labels ?
     if(cust("factor.labels",TRUE)) {
-      p <- p + geom_label(
+      p <- p + geom_text(
         aes_string(x="x",y="y",label=factor),
         data=bary,
         color=cust("factor.labels.color","black"),
@@ -387,7 +377,7 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
         )
     }
   }
-  
+
   # return plot
   p
 }
@@ -395,59 +385,44 @@ plot.SCGLR <- function(x, ..., style=getOption("plot.SCGLR"), plane=c(1,2)) {
 #' @title Barplot of percent of overall X variance captured by component
 #' @export
 #' @method barplot SCGLR
-#' @description A custom plot for SCGLR objetcs
+#' @description Barplot of percent of overall X variance captured by component
 #' @param height object of class 'SCGLR', usually a result of running \code{\link{scglr}}.
 #' @param \dots optional arguments.
-#' @param plane a size-2 vector (or comma separated string) indicating which components are plotted (eg: c(1,2) or "1,2").
 #' @return an object of class ggplot.
 #' @seealso For barplot application see examples in \code{\link{plot.SCGLR}}.
-#' @importFrom scales percent_format
-barplot.SCGLR <- function(height, ..., plane=NULL) {
-  if(!is.null(plane)) {
-    # process plane
-    if(is.character(plane)) {
-      plane <- as.integer(trim(unlist(strsplit(plane, ","))))
-    }
-    
-    # sanity checking
-    if(length(plane) !=2 ) {
-      stop("Plane should have two components!")
-    }
-    if((min(plane)<1) || (max(plane)>length(height$inertia))) {
-      stop("Invalid components for plane!")
-    }
-  }
-  
-  # build data frame from inertia
-  inertia <- data.frame(
-      inertia=height$inertia,
-      comp=1:length(height$inertia),
-      plane_color="black",
-      stringsAsFactors = F)
-  
-  # recolor unused component in gray
-  if(!is.null(plane))
-    inertia$plane[-plane] <- "gray"
-  
-  ggplot(data=inertia)+geom_bar(aes(comp,inertia),fill=inertia$plane,stat="identity",width=0.5) +
-    scale_x_discrete(labels=names(height$inertia),limits=1:length(inertia$comp))+
-    scale_y_continuous(labels=percent_format())+
-    labs(x="Components", y="Inertia", title="Inertia per component\n", ...)#+
-    #geom_text(aes(comp,inertia,label=round(100*inertia,2)),vjust=0)
+#' @keywords internal
+barplot.SCGLR <- function(height, ...) {
+  .Deprecated("screeplot")
+  screeplot.SCGLR(height, ...)
+}
+
+#' @title Screeplot of percent of overall X variance captured by component
+#' @export
+#' @method screeplot SCGLR
+#' @description Screeplot of percent of overall X variance captured by component
+#' @param x object of class 'SCGLR', usually a result of running \code{\link{scglr}}.
+#' @param \dots optional arguments.
+#' @return an object of class ggplot.
+#' @seealso For screeplot application see examples in \code{\link{plot.SCGLR}}.
+screeplot.SCGLR <- function(x, ...) {
+  inertia <- data.frame(inertia=x$inertia,comp=1:length(x$inertia))
+  ggplot(inertia)+
+    geom_col(aes(x=comp,y=inertia))+
+    scale_x_discrete(labels=names(x$inertia),limits=1:length(inertia$comp))+
+    labs(x="Components", y="Inertia", title="Inertia per component\n", ...)
 }
 
 #' @title Pairwise scglr plot on components
 #' @export
-#' @importFrom utils combn
 #' @method pairs SCGLR
 #' @description Pairwise scglr plot on components
 #' @param x object of class 'SCGLR', usually a result of running \code{\link{scglr}}.
-#' @param \dots optionally, further arguments forwarded to \code{link{plot.SCGLR}}.
+#' @param \dots optionally, further arguments forwarded to \code{\link{plot.SCGLR}}.
 #' @param nrow number of rows of the grid layout.
 #' @param ncol number of columns of the grid layout.
 #' @param components vector of integers selecting components to plot (default is all components).
 # @return an object of class ggplot.
-#' @seealso For pairs application see examples in \code{\link{plot.SCGLR}} 
+#' @seealso For pairs application see examples in \code{\link{plot.SCGLR}}
 pairs.SCGLR <- function(x, ..., nrow=NULL, ncol=NULL, components=NULL) {
   prm <- list(...)
 
@@ -456,7 +431,7 @@ pairs.SCGLR <- function(x, ..., nrow=NULL, ncol=NULL, components=NULL) {
 
   prm["x"] <- list(x)
   prm[["components"]] <- NULL
-  
+
   # pairs of components
   if(is.null(components)) {
     ncomp <- ncol(x$compr)
@@ -469,15 +444,15 @@ pairs.SCGLR <- function(x, ..., nrow=NULL, ncol=NULL, components=NULL) {
   }
   # build pairs
   cmp_pairs <- combn(ncomp, 2, simplify=FALSE)
-  
+
   # build plot list
   one_plot <- function(cmp_pair) {
     do.call("plot.SCGLR", c(prm, plane=list(cmp_pair),title=paste(cmp_pair,collapse = "/")))
   }
   plots <- lapply(cmp_pairs, one_plot)
-  
+
   # arrange them in a grid
-  if(is.null(nc) & is.null(nr)) { 
+  if(is.null(nc) & is.null(nr)) {
     nr <- as.integer(sqrt(length(plots)))
   }
 #  if(require("gridExtra",quietly = TRUE)) {
@@ -488,7 +463,6 @@ pairs.SCGLR <- function(x, ..., nrow=NULL, ncol=NULL, components=NULL) {
 }
 
 ## equivalent du par pour les ggplot2
-#' @importFrom grid viewport grid.newpage pushViewport viewport grid.layout
 vp.layout <- function(x, y) viewport(layout.pos.row=x, layout.pos.col=y)
 arrange <- function(..., nrow=NULL, ncol=NULL, as.table=FALSE) {
   dots <- list(...)
@@ -510,5 +484,48 @@ arrange <- function(..., nrow=NULL, ncol=NULL, as.table=FALSE) {
       ii.p <- ii.p + 1
     }
   }
-  NULL
+  invisible(NULL)
+}
+
+#' @title Barplot of percent of overall X variance captured by component
+#' @export
+#' @method barplot SCGLRTHM
+#' @description Barplot of percent of overall X variance captured by component by theme
+#' @param height object of class 'SCGLRTHM', usually a result of running \code{\link{theme}}.
+#' @param \dots optional arguments.
+#' @return an object of class ggplot.
+#' @keywords internal
+barplot.SCGLRTHM <- function(height, ...) {
+  .Deprecated("screeplot.SCGLRTHM")
+  screeplot.SCGLRTHM(height, ...)
+}
+
+#' @title Screeplot of percent of overall X variance captured by component
+#' @export
+#' @method screeplot SCGLRTHM
+#' @description Screeplot of percent of overall X variance captured by component by theme
+#' @param x object of class 'SCGLRTHM', usually a result of running \code{\link{theme}}.
+#' @param \dots optional arguments.
+#' @return an object of class ggplot.
+screeplot.SCGLRTHM <- function(x, ...) {
+  plots <- lapply(x$themes, function(t) 
+    screeplot.SCGLR(t,...)+
+      labs(title=paste0("Theme ",t$label,": Inertia per component\n"))
+  )
+  do.call(arrange, plots)
+}
+
+#' SCGLRTHM generic plot
+#' @export
+#' @method plot SCGLRTHM
+#' @description SCGLR generic plot for themes
+#' @param x an object from SCGLRTHM class.
+#' @param \dots see SCGLR plot method
+#' @return an object of class \code{\link{ggplot}}.
+plot.SCGLRTHM <- function(x, ...) {
+  plots <- lapply(x$themes, function(t) 
+    plot.SCGLR(t,...)+
+      labs(title=paste0("Theme ",t$label,": Correlation plot\n"))
+  )
+  do.call(arrange, plots)
 }

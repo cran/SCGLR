@@ -1,25 +1,21 @@
-#@title Function that computes a submatrix of metric M^(-1/2)
-#@export 
-#@param x the column vector of a regressor or factor
-#' @importFrom stats model.matrix
-metricBloc <- function(x){
-  z <- model.matrix(~x)[,-1,drop=FALSE]
-  z <- scale(z,center=TRUE,scale=FALSE)
-  z <- (t(z)%*%z)/nrow(z)
-  return(z)  
-}
-
-
 #@title Function that computes M^(-1/2)
-#@export 
-#@param data data.frame containing all covariates
-metric <- function(data){
-  z <- sapply(data,metricBloc)
-  z <- bdiag(z)
-  if(ncol(z)==1){
-    z <- diag(as.vector(as.matrix(z)))
+#@export
+#@param dt a data.frame containing  covariates
+metric <- function(dt){
+  dt <- as.data.frame(dt)
+  mdt <- stats::model.frame(dt,data=dt)
+  nm <- names(mdt)
+  out <- lapply(1:ncol(mdt),function(k){
+    x <- model.matrix(as.formula(paste0("~",nm[k])),data=mdt)[,-1,drop=FALSE]
+    x <- scale(x[,,drop=FALSE],TRUE,FALSE)
+    x <- crossprod(x)/nrow(x)
+  })
+  out <- bdiag(out)
+  out <- svd(out)
+  if(length(out$d)==1){
+    out <- out$u%*%as.matrix(1/sqrt(out$d),1,1)%*%t(out$v)
+  }else{
+    out <- out$u%*%diag(1/sqrt(out$d))%*%t(out$v)
   }
-  z <- svd(z)
-  z <- z$u%*%diag(1/sqrt(z$d))%*%t(z$v)
-  return(z)
+  return(out)
 }

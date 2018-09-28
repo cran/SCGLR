@@ -4,9 +4,10 @@
 \alias{scglrCrossVal}
 \title{Function that fits and selects the number of component by cross-validation.}
 \usage{
-scglrCrossVal(formula, data, family, K = 1, nfolds = 5, type = "mspe",
-  size = NULL, offset = NULL, subset = NULL, na.action = na.omit,
-  crit = list(), method = methodSR(), mc.cores = 1)
+scglrCrossVal(formula, data, family, K = 1, nfolds = 5,
+  type = "mspe", size = NULL, offset = NULL, subset = NULL,
+  na.action = na.omit, crit = list(), method = methodSR(),
+  mc.cores = 1)
 }
 \arguments{
 \item{formula}{an object of class "Formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted.}
@@ -17,11 +18,11 @@ scglrCrossVal(formula, data, family, K = 1, nfolds = 5, type = "mspe",
 
 \item{K}{number of components, default is one.}
 
-\item{nfolds}{number of folds, default is 5. 
-Although nfolds can be as large as the sample size (leave-one-out CV), 
+\item{nfolds}{number of folds, default is 5.
+Although nfolds can be as large as the sample size (leave-one-out CV),
 it is not recommended for large datasets.}
 
-\item{type}{loss function to use for cross-validation. 
+\item{type}{loss function to use for cross-validation.
 Currently six options are available depending on whether the responses are of the same distribution family.
 If the responses are all bernoulli distributed, then the prediction performance may be measured
 through the area under the ROC curve: type = "auc"
@@ -37,11 +38,11 @@ A vector or a matrix of size: number of observations * number of Poisson depende
 
 \item{na.action}{a function which indicates what should happen when the data contain NAs. The default is set to the \code{na.omit}.}
 
-\item{crit}{a list of two elements : maxit and tol, describing respectively the maximum number of iterations and 
+\item{crit}{a list of two elements : maxit and tol, describing respectively the maximum number of iterations and
 the tolerance convergence criterion for the Fisher scoring algorithm. Default is set to 50 and 10e-6 respectively.}
 
-\item{method}{Regularization criterion type. Object of class "method.SCGLR" 
-built by \code{\link{methodLPLS}} for PLS-type approach or \code{\link{methodSR}} for Structural Relevance.}
+\item{method}{Regularization criterion type. Object of class "method.SCGLR"
+built by \code{\link{methodSR}} for Structural Relevance.}
 
 \item{mc.cores}{max number of cores to use when using parallelization (Not available in windows yet and strongly discouraged if in interactive mode).}
 }
@@ -69,19 +70,17 @@ nx <-nx[!nx\%in\%c("geology","surface")]
 
 # build multivariate formula
 # we also add "lat*lon" as computed covariate
-form <- multivariateFormula(ny,c(nx,"I(lat*lon)"),c("geology"))
+form <- multivariateFormula(ny,c(nx,"I(lat*lon)"),A=c("geology"))
 
-# define family 
+# define family
 fam <- rep("poisson",length(ny))
 
 # cross validation
-genus.cv <- scglrCrossVal(formula=form, data=genus, family=fam, K=12, 
+genus.cv <- scglrCrossVal(formula=form, data=genus, family=fam, K=12,
  offset=genus$surface)
 
 # find best K
-mean.crit <- t(apply(genus.cv,1,function(x) x/mean(x)))
-mean.crit <- apply(mean.crit,2,mean)
-K.cv <- which.min(mean.crit)-1
+mean.crit <- colMeans(log(cv))
 
 #plot(mean.crit, type="l")
 }
@@ -89,4 +88,3 @@ K.cv <- which.min(mean.crit)-1
 \references{
 Bry X., Trottier C., Verron T. and Mortier F. (2013) Supervised Component Generalized Linear Regression using a PLS-extension of the Fisher scoring algorithm. \emph{Journal of Multivariate Analysis}, 119, 47-60.
 }
-

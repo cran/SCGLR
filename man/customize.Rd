@@ -73,4 +73,3 @@ myStyle <- list(predictors=TRUE, pred.arrows=FALSE)
 plot(genus.scglr, style=myStyle)
 }
 }
-

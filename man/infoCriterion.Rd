@@ -11,23 +11,23 @@ infoCriterion(ynew, pred, family, type, size = NULL, npar = 0)
 
 \item{pred}{predicted value of the linear predictor obtained from Xnew and the estimated parameters.}
 
-\item{family}{a vector of the same length as the number of responses containing characters 
+\item{family}{a vector of the same length as the number of responses containing characters
 identifying the distribution families of the dependent variables.
 "bernoulli", "binomial", "poisson" or "gaussian" are allowed.}
 
 \item{type}{information criterion used. Likelihood, aic, bic, aicc or
 Mean Square Prediction Error (mspe) are defined. Area Under ROC Curve (auc) also defined for Bernoulli cases only.}
 
-\item{size}{describes the number of trials for the binomial dependent variables. 
+\item{size}{describes the number of trials for the binomial dependent variables.
 A (number of statistical units * number of binomial dependent variables) matrix is expected.}
 
 \item{npar}{number of parameters used for penalisation.}
 }
 \value{
-a matrix containing the criterion value for each dependent variable (row) 
+a matrix containing the criterion value for each dependent variable (row)
 and each number of components (column).
 }
 \description{
 Function that calculates cross-validation selection criteria
 }
-
+\keyword{internal}

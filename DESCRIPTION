@@ -1,30 +1,39 @@
 Package: SCGLR
 Type: Package
 Title: Supervised Component Generalized Linear Regression
-Version: 2.0.3
-Date: 2016-03-07
+Description: 
+    An extension of the Fisher Scoring Algorithm to combine PLS regression with GLM 
+    estimation in the multivariate context. Covariates can also be grouped in themes.
+Version: 3.0
+Date: 2018-09-24
 Authors@R: c(
-  person("Guillaume", "Cornu", role=c("cre","aut"),email="gcornu@cirad.fr"),
-  person("Frederic", "Mortier", role="aut", email="fmortier@cirad.fr"),
-  person("Catherine", "Trottier", role="aut", email="catherine.trottier@univ-montp3.fr"),
-  person("Xavier", "Bry", role="aut", email="xavier.bry@univ-montp2.fr"))
-Description: The Fisher Scoring Algorithm is extended so as to combine Partial
-    Least Squares regression with Generalized Linear Model estimation in the
-    multivariate context.
+    person("Guillaume","Cornu",,"gcornu@cirad.fr", role=c("aut","cre"), comment=c(ORCID="0000-0002-7523-5176")),
+    person("Frederic","Mortier",,"fmortier@cirad.fr",role="aut"),
+    person("Catherine","Trottier",,"catherine.trottier@univ-montp3.fr",role="aut"),
+    person("Xavier","Bry",,"xavier.bry@univ-montp2.fr",role="aut"),
+    person("Sylvie","Gourlet-Fleury",,"sylvie.gourlet-fleury@cirad.fr",role="dtc",comment=c(ORCID="0000-0002-1136-4307",CoForChange="http://www.coforchange.eu/")),
+    person("Claude","Garcia",,"claude.garcia@cirad.fr",role="dtc",comment=c(ORCID="0000-0002-7351-0226",CoForTips="http://www.cofortips.org/"))  
+  )
 License: CeCILL-2 | GPL-2
+URL: https://scnext.github.io/SCGLR, https://github.com/SCnext/SCGLR,
+        https://cran.r-project.org/package=SCGLR
+BugReports: https://github.com/SCnext/SCGLR/issues
 Depends: R (>= 3.0.0)
-Imports: Matrix,Formula,expm,graphics,grid,ggplot2 (>=
-        2.0.0),pROC,scales
-Suggests: parallel,gridExtra,knitr
+Imports: Matrix,Formula,expm,graphics,ggplot2,grid,pROC,ade4
+Suggests: parallel,gridExtra
 LazyData: yes
-VignetteBuilder: knitr
-RoxygenNote: 5.0.1
+RoxygenNote: 6.1.0
+Encoding: UTF-8
 NeedsCompilation: no
-Packaged: 2016-03-16 15:36:12 UTC; cornu
-Author: Guillaume Cornu [cre, aut],
+Packaged: 2018-09-28 08:56:02 UTC; gcornu
+Author: Guillaume Cornu [aut, cre] (<https://orcid.org/0000-0002-7523-5176>),
   Frederic Mortier [aut],
   Catherine Trottier [aut],
-  Xavier Bry [aut]
+  Xavier Bry [aut],
+  Sylvie Gourlet-Fleury [dtc] (<https://orcid.org/0000-0002-1136-4307>,
+    http://www.coforchange.eu/),
+  Claude Garcia [dtc] (<https://orcid.org/0000-0002-7351-0226>,
+    http://www.cofortips.org/)
 Maintainer: Guillaume Cornu <gcornu@cirad.fr>
 Repository: CRAN
-Date/Publication: 2016-03-16 18:16:10
+Date/Publication: 2018-09-28 09:30:03 UTC

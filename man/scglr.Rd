@@ -4,22 +4,24 @@
 \alias{scglr}
 \title{Function that fits the scglr model}
 \usage{
-scglr(formula, data, family, K = 1, size = NULL, offset = NULL,
-  subset = NULL, na.action = na.omit, crit = list(),
+scglr(formula, data, family, K = 1, size = NULL, weights = NULL,
+  offset = NULL, subset = NULL, na.action = na.omit, crit = list(),
   method = methodSR())
 }
 \arguments{
-\item{formula}{an object of class \code{Formula} (or one that can be coerced to that class): a symbolic description of the model to be fitted.}
+\item{formula}{an object of class \code{MultivariateFormula} (or one that can be coerced to that class): a symbolic description of the model to be fitted.}
 
 \item{data}{a data frame to be modeled.}
 
-\item{family}{a vector of character of the same length as the number of dependent variables: 
+\item{family}{a vector of character of the same length as the number of dependent variables:
 "bernoulli", "binomial", "poisson" or "gaussian" is allowed.}
 
 \item{K}{number of components, default is one.}
 
-\item{size}{describes the number of trials for the binomial dependent variables. 
+\item{size}{describes the number of trials for the binomial dependent variables.
 A (number of statistical units * number of binomial dependent variables) matrix is expected.}
+
+\item{weights}{weights on individuals (not available for now)}
 
 \item{offset}{used for the poisson dependent variables.
 A vector or a matrix of size: number of observations * number of Poisson dependent variables is expected.}
@@ -28,11 +30,11 @@ A vector or a matrix of size: number of observations * number of Poisson depende
 
 \item{na.action}{a function which indicates what should happen when the data contain NAs. The default is set to \code{na.omit}.}
 
-\item{crit}{a list of two elements : maxit and tol, describing respectively the maximum number of iterations and 
+\item{crit}{a list of two elements : maxit and tol, describing respectively the maximum number of iterations and
 the tolerance convergence criterion for the Fisher scoring algorithm. Default is set to 50 and 10e-6 respectively.}
 
-\item{method}{Regularization criterion type. Object of class "method.SCGLR" 
-built by \code{\link{methodLPLS}} for PLS-type approach or \code{\link{methodSR}} for Structural Relevance.}
+\item{method}{structural relevance criterion. Object of class "method.SCGLR"
+built by  \code{\link{methodSR}} for Structural Relevance.}
 }
 \value{
 an object of the SCGLR class.
@@ -43,7 +45,7 @@ The generic accessor functions \code{\link{coef}} can be used to extract various
 
 An object of class "\code{SCGLR}" is a list containing following components:
 
-\item{u}{matrix of size (number of regressors * number of components), contains the component-loadings, 
+\item{u}{matrix of size (number of regressors * number of components), contains the component-loadings,
 i.e. the coefficients of the regressors in the linear combination giving each component.}
 
 \item{comp}{matrix of size (number of statistical units * number of components) having the components as column vectors.}
@@ -52,7 +54,7 @@ i.e. the coefficients of the regressors in the linear combination giving each co
 
 \item{gamma}{list of length number of dependant variables. Each element is a matrix of coefficients, standard errors, z-values and p-values.}
 
-\item{beta}{matrix of size (number of regressors + 1 (intercept) * number of dependent variables), contains the coefficients 
+\item{beta}{matrix of size (number of regressors + 1 (intercept) * number of dependent variables), contains the coefficients
 of the regression on the original regressors X.}
 
 \item{lin.pred}{data.frame of size (number of statistical units * number of dependent variables), the fitted linear predictor.}
@@ -61,10 +63,14 @@ of the regression on the original regressors X.}
 
 \item{xNumeric}{data.frame containing the quantitative regressors.}
 
-\item{inertia}{matrix of size (number of components * 2), contains the percentage and cumulative percentage 
+\item{inertia}{matrix of size (number of components * 2), contains the percentage and cumulative percentage
 of the overall regressors' variance, captured by each component.}
 
-\item{deviance}{vector of length (number of dependent variables), gives the deviance of each \eqn{y_k}'s GLM on the components.}
+\item{logLik}{vector of length (number of dependent variables), gives the likelihood of the model of each \eqn{y_k}'s GLM on the components.}
+
+\item{deviance.null}{vector of length (number of dependent variables), gives the deviance  of the null model of each \eqn{y_k}'s GLM on the components.}
+
+\item{deviance.residual}{vector of length (number of dependent variables), gives the deviance  of the model of each \eqn{y_k}'s GLM on the components.}
 }
 \description{
 Calculates the components to predict all the dependent variables.
@@ -87,7 +93,7 @@ nx <-nx[!nx\%in\%c("geology","surface")]
 
 # build multivariate formula
 # we also add "lat*lon" as computed covariate
-form <- multivariateFormula(ny,c(nx,"I(lat*lon)"),c("geology"))
+form <- multivariateFormula(ny,c(nx,"I(lat*lon)"),A=c("geology"))
 
 # define family
 fam <- rep("poisson",length(ny))
@@ -101,4 +107,3 @@ summary(genus.scglr)
 \references{
 Bry X., Trottier C., Verron T. and Mortier F. (2013) Supervised Component Generalized Linear Regression using a PLS-extension of the Fisher scoring algorithm. \emph{Journal of Multivariate Analysis}, 119, 47-60.
 }
-
